@@ -1,474 +1,482 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuCheckboxItem, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
-import { Copy, Download, Search, ListChecks, ClipboardList, Stethoscope, Activity, FileText, Filter, RotateCcw } from "lucide-react";
-
-// ------------------------------
-// Données cliniques (synthèse RP)
-// ------------------------------
-
-// ⚠️ NOTE IMPORTANTE (RP):
-// Ce contenu est pensé pour le jeu de rôle (GTA RP) uniquement. 
-// Il NE REMPLACE PAS un avis médical réel. Aucune posologie n'est fournie.
-
-const CATEGORIES = [
-  "Orthopédie/Os",
-  "Crâne/Neurochir",
-  "Rachis",
-  "Muscles/Tendons",
-  "Thorax",
-  "Cardiaque",
-  "Viscéral/Abdomen",
-  "Grands brûlés",
-  "Neurologie traumatique",
-];
-
-const bank = [
-  {
-    id: "os-fix",
-    titre: "Réparation osseuse (broches/vis/plaques/pâte)",
-    categorie: "Orthopédie/Os",
-    tags: ["fracture", "broches", "vis", "plaques", "pâte osseuse"],
-    examens: [
-      "Inspection + douleur provoquée, déformation, plaie ouverte",
-      "Contrôle vasculo-nerveux distal (pouls, sensibilité, motricité)",
-      "Immobilisation provisoire (attelle) avant transport",
-      "Imagerie RP: radio/scan si dispo en service",
-    ],
-    gestes: [
-      "Hémostase locale si plaie",
-      "Attelle modelable, glace externe",
-      "Antalgie non chiffrée (RP)",
-      "Transport vers bloc si fracture instable/ouverte",
-    ],
-    bloc: [
-      "Broches/clous IM: réalignement + verrouillage",
-      "Plaques + vis anatomiques si fracture articulaire/complexe",
-      "Pâte/greffe osseuse si perte de substance",
-    ],
-    postop: [
-      "Contrôle vasculo-nerveux post-immobilisation",
-      "Imagerie de contrôle",
-      "Décharge/béquilles selon segment",
-    ],
-    rapportPoints: ["Os concerné", "Type de fracture", "Gestes d'urgence", "Fixation réalisée", "Surveillance"],
-  },
-  {
-    id: "crane",
-    titre: "Chirurgie crânienne (craniotomie / crânioplastie)",
-    categorie: "Crâne/Neurochir",
-    tags: ["TCC", "hématome", "craniotomie", "crânioplastie", "plaques crâniennes"],
-    examens: [
-      "Score de Glasgow, pupilles, déficit focal",
-      "Stabilisation cervicale jusqu'à imagerie",
-      "Scan crâne si dispo (RP)",
-    ],
-    gestes: [
-      "ABCDE avec surveillance G",
-      "Oxygénation, contrôle des convulsions si besoin (RP)",
-      "Préparation bloc si hématome compressif",
-    ],
-    bloc: [
-      "Craniotomie: volet + évacuation hématome",
-      "Plaques/vis titane pour refixation",
-      "Crânioplastie ou ciment (PMMA/hydroxyapatite) si défaut",
-    ],
-    postop: [
-      "Surveillance neuro rapprochée",
-      "Scan de contrôle",
-      "Prévention infection",
-    ],
-    rapportPoints: ["Mécanisme", "Glasgow", "Lésions scan", "Geste neurochir", "Évolution immédiate"],
-  },
-  {
-    id: "rachis",
-    titre: "Rachis (discectomie, laminectomie, fusion, foraminotomie)",
-    categorie: "Rachis",
-    tags: ["rachis", "hernie discale", "sténose", "fracture", "scoliose"],
-    examens: [
-      "Immobilisation stricte du rachis",
-      "Évaluation sensitivo-motrice et périnée",
-      "Scan/IRM selon RP",
-    ],
-    gestes: [
-      "Collier + plan dur",
-      "Antalgie prudente (RP)",
-      "Transport bloc si déficit évolutif/instabilité",
-    ],
-    bloc: [
-      "Discectomie si conflit disque-nerf",
-      "Laminectomie pour décompression",
-      "Fusion + vis/tiges, cage si instabilité",
-    ],
-    postop: ["Surveillance neuro", "Mobilisation encadrée", "Imagerie de contrôle"],
-    rapportPoints: ["Niveau lésionnel", "Déficit", "Imagerie", "Geste réalisé", "Stabilité finale"],
-  },
-  {
-    id: "muscle",
-    titre: "Rupture musculaire (partielle/complète)",
-    categorie: "Muscles/Tendons",
-    tags: ["déchirure", "rupture", "suture musculaire", "rééducation"],
-    examens: [
-      "Douleur localisée, hématome, déficit fonctionnel",
-      "Échelle douleur RP",
-      "Échographie si dispo",
-    ],
-    gestes: ["Repos, glace, compression, élévation (RICE)", "Immobilisation courte", "Antalgie RP"],
-    bloc: ["Suture des berges musculaires", "Renfort tendineux si besoin"],
-    postop: ["Immobilisation initiale", "Mobilisation douce", "Renforcement progressif"],
-    rapportPoints: ["Muscle atteint", "Type (partielle/complète)", "Gestes d'urgence", "Réparation", "Programme réhab"],
-  },
-  {
-    id: "thorax",
-    titre: "Chirurgie thoracique (lobe, médiastin, trachée, trauma)",
-    categorie: "Thorax",
-    tags: ["lobectomie", "pneumothorax", "hémothorax", "décortication", "trachéotomie"],
-    examens: ["Détresse respi?", "Auscultation, saturation", "Écho FAST/Radio si dispo"],
-    gestes: [
-      "Aiguille décompression si pneumo sous tension (RP)",
-      "Drain thoracique si indiqué (RP)",
-      "Oxygène et analgésie RP",
-    ],
-    bloc: [
-      "Lobectomie/segmentectomie selon lésion",
-      "Décortication pleurale",
-      "Trachéotomie si voie aérienne compromise",
-    ],
-    postop: ["Surveillance respi + drains", "Kiné respi", "Contrôle fuites d'air"],
-    rapportPoints: ["Mécanisme/Pathologie", "Côté atteint", "Gestes préhospitaliers", "Geste thoracique", "Drains"]
-  },
-  {
-    id: "cardiaque",
-    titre: "Cardiaque (pontage, valves, FA, DAV)",
-    categorie: "Cardiaque",
-    tags: ["pontage", "valve", "FA", "transplantation", "DAV"],
-    examens: ["Douleur thoracique?", "ECG si RP", "Écho si dispo"],
-    gestes: ["ABCDE + O2 si SpO2 basse", "Anti-douleur RP", "Prépa bloc si instabilité"],
-    bloc: ["Pontage coronarien", "Réparation/remplacement valvulaire", "Ablation/MAZE", "Implant DAV"],
-    postop: ["Surveillance en USIC/REA", "Prévention infection", "Rééducation cardiaque"],
-    rapportPoints: ["Diagnostic", "Geste cardiaque", "CPEC (REA/USIC)", "Évolution"],
-  },
-  {
-    id: "visc",
-    titre: "Viscéral/Abdomen (appendice, vésicule, hernie, résection…)",
-    categorie: "Viscéral/Abdomen",
-    tags: ["appendicite", "vésicule", "hernie", "résection", "gastrectomie", "bariatrique", "foie", "pancréas", "rate"],
-    examens: ["Douleur, défense/contracture", "N/V, transit", "FAST/Scan RP"],
-    gestes: ["Jeûne + VVP (RP)", "Antalgie RP", "Préparation bloc si abdomen aigu/trauma"],
-    bloc: [
-      "Appendicectomie (souvent coelio)",
-      "Cholécystectomie coelio",
-      "Herniorraphie/mesh",
-      "Résection intestinale ± stomie",
-      "Gastrectomie / sleeve",
-      "Hépatectomie partielle",
-      "Pancréatectomie (Whipple/distale)",
-      "Splénectomie",
-    ],
-    postop: ["Surveillance souillures/saignement", "Reprise du transit", "Douleur"],
-    rapportPoints: ["Organe", "Diagnostic", "Voie d'abord", "Geste", "Suites"],
-  },
-  {
-    id: "brules",
-    titre: "Grands brûlés",
-    categorie: "Grands brûlés",
-    tags: ["SCB", "Parkland", "greffe peau", "débridement"],
-    examens: [
-      "Évaluer profondeur + %SCB (règle des 9 / Lund-Browder RP)",
-      "Voies aériennes (inhalation?)",
-    ],
-    gestes: [
-      "Refroidir (pas de glace directe prolongée)",
-      "Retirer vêtements/objets chauds",
-      "Voie veineuse, réanimation liquidienne (RP, formule de Parkland en info seulement)",
-      "Antalgie RP",
-    ],
-    bloc: ["Débridement", "Greffes cutanées", "Pansements spécifiques"],
-    postop: ["Kiné + orthèses", "Suivi psycho", "Gestion cicatrices"],
-    rapportPoints: ["Mécanisme", "%SCB estimée", "Zones atteintes", "Gestes/initiaux", "Greffes"],
-  },
-  {
-    id: "neurotrauma",
-    titre: "Neurologie traumatique (TCC, moelle, nerfs périph.)",
-    categorie: "Neurologie traumatique",
-    tags: ["TCC", "lésion médullaire", "périphérique", "décompression"],
-    examens: ["ABCDE + Glasgow", "Immobilisation rachis", "Scan/IRM RP"],
-    gestes: ["Stabiliser VA/O2", "Prévenir hypotension/hypoxie", "Transport rapide vers spécialité"],
-    bloc: ["Craniotomie décompressive", "Fixation rachidienne", "Réparation nerveuse"],
-    postop: ["Rééducation pluridisciplinaire", "Prévention escarres/TVP", "Suivi long cours"],
-    rapportPoints: ["Type lésion", "Score GCS", "Gestes d'urgence", "Chirurgie", "Plan réhab"],
-  },
-];
-
-const checklists = {
-  ABCDE: [
-    "A — Airway: perméabilité, colliers si trauma",
-    "B — Breathing: FR, SpO2, auscultation, désamorcer pneumo si tension (RP)",
-    "C — Circulation: pouls, hémorragies, perfusion",
-    "D — Disability: Glasgow, pupilles, déficit",
-    "E — Exposure: déshabiller, température, recherche lésions",
-  ],
-  TraumaThorax: [
-    "Inspection cage (emphysème sous-cutané, volet costal)",
-    "Percussion (hypersonorité/tympanisme)",
-    "Auscultation (asymétrie)",
-    "Si détresse + déviation trachéale ⇒ décompression (RP)",
-  ],
-  Brules: [
-    "Arrêt agent vulnérant, refroidissement 10-20 min",
-    "Évaluer %SCB (RP)",
-    "Voies aériennes: fumées, raucité, suie",
-    "Couvrir stérile/film alimentaire (RP)",
-  ],
-};
-
-// ------------------------------
-// Utilitaires
-// ------------------------------
-
-function cx(...cls){ return cls.filter(Boolean).join(" "); }
-
-function downloadText(filename, text){
-  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// ------------------------------
-// Composant principal
-// ------------------------------
-
-export default function App(){
-  const [q, setQ] = useState("");
-  const [catFilter, setCatFilter] = useState(CATEGORIES);
-  const [selected, setSelected] = useState(null);
-  const [report, setReport] = useState("");
-  const [includeChecklist, setIncludeChecklist] = useState({ ABCDE: true, TraumaThorax: false, Brules: false });
-
-  useEffect(()=>{
-    const cached = localStorage.getItem("gta_rp_chir_report");
-    if(cached) setReport(cached);
-  },[]);
-  useEffect(()=>{
-    localStorage.setItem("gta_rp_chir_report", report);
-  },[report]);
-
-  const filtered = useMemo(()=>{
-    const lower = q.toLowerCase();
-    return bank.filter(it =>
-      catFilter.includes(it.categorie) && (
-        !lower || it.titre.toLowerCase().includes(lower) || it.tags.join(" ").toLowerCase().includes(lower)
-      )
-    );
-  }, [q, catFilter]);
-
-  function makeReport(item){
-    const now = new Date();
-    const pad = (n)=> String(n).padStart(2,"0");
-    const dateStr = `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-
-    const checklistText = Object.entries(includeChecklist)
-      .filter(([k,v])=>v)
-      .map(([k])=>`\nChecklist ${k}:\n- ` + checklists[k].join("\n- "))
-      .join("\n");
-
-    return `RAPPORT MÉDICAL — Chirurgie complexe (RP)\nDate/Heure: ${dateStr}\n\nPatient: __________________  Âge: __  Sexe: __  ID RP: ________\nMéca/Contexte: _________________________________________________\n\nCATÉGORIE: ${item.categorie}\nCAS: ${item.titre}\n\nEXAMENS:\n- ${item.examens.join("\n- ")}\n\nGESTES INITIAUX:\n- ${item.gestes.join("\n- ")}\n\nBLOC/OPÉRATION:\n- ${item.bloc.join("\n- ")}\n\nPOST-OP / SURVEILLANCE:\n- ${item.postop.join("\n- ")}\n${checklistText}\n\nPOINTS CLÉS À DOCUMENTER:\n- ${item.rapportPoints.join("\n- ")}\n\nRemarques complémentaires: _____________________________________\nSignature: __________`;
-  }
-
-  function handleCompose(item){
-    const base = makeReport(item);
-    setReport(base);
-    setSelected(item.id);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  function resetFilters(){ setQ(""); setCatFilter(CATEGORIES); }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-900">
-      <header className="sticky top-0 z-30 backdrop-blur bg-white/70 border-b">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
-          <Stethoscope className="w-6 h-6" />
-          <h1 className="text-xl font-semibold">Chirurgie Complexe — Guide RP</h1>
-          <Badge variant="secondary" className="ml-auto">Hôpital — GTA RP</Badge>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 py-6 grid lg:grid-cols-3 gap-6">
-        {/* Colonne gauche: Recherche + Filtres + Résultats */}
-        <section className="lg:col-span-2 space-y-4">
-          <Card className="shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Chercher une blessure / un acte</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex gap-2 items-center">
-                <div className="relative flex-1">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-60" />
-                  <Input value={q} onChange={e=>setQ(e.target.value)} placeholder="fracture, rachis, brûlure, valve…" className="pl-9" />
-                </div>
-                <Button variant="outline" onClick={resetFilters}><RotateCcw className="w-4 h-4 mr-2"/>Réinitialiser</Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="secondary"><Filter className="w-4 h-4 mr-2"/>Catégories</Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-64">
-                    <DropdownMenuLabel>Afficher</DropdownMenuLabel>
-                    {CATEGORIES.map(cat => (
-                      <DropdownMenuCheckboxItem
-                        key={cat}
-                        checked={catFilter.includes(cat)}
-                        onCheckedChange={(v)=>{
-                          setCatFilter(prev => v ? [...prev, cat] : prev.filter(c=>c!==cat));
-                        }}
-                      >{cat}</DropdownMenuCheckboxItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-3">
-                {filtered.map(item => (
-                  <Card key={item.id} className={cx("border", selected===item.id && "ring-2 ring-slate-900/10")}> 
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-semibold leading-tight">{item.titre}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="flex flex-wrap gap-1">
-                        <Badge variant="outline">{item.categorie}</Badge>
-                        {item.tags.slice(0,3).map(t => <Badge key={t} variant="secondary">{t}</Badge>)}
-                      </div>
-                      <div className="flex gap-2 pt-1">
-                        <Button size="sm" onClick={()=>handleCompose(item)}><ClipboardList className="w-4 h-4 mr-1"/>Composer rapport</Button>
-                        <Button size="sm" variant="outline" onClick={()=>setSelected(item.id)}><ListChecks className="w-4 h-4 mr-1"/>Voir détails</Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {selected && (
-                <Details item={bank.find(b=>b.id===selected)!} includeChecklist={includeChecklist} setIncludeChecklist={setIncludeChecklist} onCompose={handleCompose} />
-              )}
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Colonne droite: Rapport */}
-        <section className="space-y-4">
-          <Card className="shadow-sm sticky top-20">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5"/>
-                <CardTitle className="text-base">Rapport médical (générateur)</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Textarea
-                className="min-h-[380px] font-mono"
-                value={report}
-                onChange={(e)=>setReport(e.target.value)}
-                placeholder={"Cliquez sur \"Composer rapport\" depuis une fiche pour pré-remplir ici…"}
-              />
-              <div className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={()=>{ navigator.clipboard.writeText(report||""); }}><Copy className="w-4 h-4 mr-2"/>Copier</Button>
-                <Button onClick={()=>downloadText("rapport_chirurgie_RP.txt", report||"")}><Download className="w-4 h-4 mr-2"/>Télécharger</Button>
-              </div>
-              <Separator/>
-              <div className="space-y-2">
-                <p className="text-sm font-medium">Inclure des checklists</p>
-                {Object.keys(checklists).map((key)=> (
-                  <label key={key} className="flex items-center gap-2 text-sm">
-                    <Checkbox checked={includeChecklist[key]} onCheckedChange={(v)=>setIncludeChecklist(prev=>({...prev, [key]: !!v}))}/>
-                    <span>{key}</span>
-                  </label>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      </main>
-
-      <footer className="max-w-7xl mx-auto px-4 pb-8 text-xs text-slate-500">
-        <Separator className="mb-3"/>
-        <p>
-          ⚠️ Outil de jeu — GTA RP. Pour simplifier les scènes et rapports. 
-          Procédures simplifiées et non prescriptives. Aucune information ici n'est un conseil médical réel.
-        </p>
-      </footer>
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chirurgie Complexe — GTA RP</title>
+  <!-- Tailwind CDN (runtime) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Petites améliorations visuelles */
+    .card{ @apply bg-white rounded-2xl shadow-sm border border-slate-200; }
+    .btn{ @apply inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border; }
+    .btn-primary{ @apply bg-slate-900 text-white border-slate-900; }
+    .btn-ghost{ @apply bg-white text-slate-700 border-slate-200; }
+    .badge{ @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-700 border border-slate-200; }
+    .tabs [data-tab]{ @apply px-3 py-1.5 rounded-lg text-sm cursor-pointer; }
+    .tabs [data-tab].active{ @apply bg-slate-900 text-white; }
+    .list-dash li{ position: relative; padding-left: 1rem; }
+    .list-dash li::before{ content: "•"; position: absolute; left: 0; color:#0f172a; }
+    .sticky-col{ position: sticky; top: 6rem; }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900">
+  <header class="sticky top-0 z-30 backdrop-blur bg-white/70 border-b">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
+      <span class="text-xl">🩺</span>
+      <h1 class="text-xl font-semibold">Chirurgie Complexe — Guide RP</h1>
+      <span class="ml-auto badge">Hôpital — GTA RP</span>
     </div>
-  );
-}
+  </header>
 
-function Details({ item, includeChecklist, setIncludeChecklist, onCompose }){
-  return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">Détails — {item.titre}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="examens" className="w-full">
-          <TabsList className="grid grid-cols-5">
-            <TabsTrigger value="examens">Examens</TabsTrigger>
-            <TabsTrigger value="gestes">Gestes</TabsTrigger>
-            <TabsTrigger value="bloc">Bloc</TabsTrigger>
-            <TabsTrigger value="postop">Post-op</TabsTrigger>
-            <TabsTrigger value="rapport">Rapport</TabsTrigger>
-          </TabsList>
-          <TabsContent value="examens">
-            <Bullets items={item.examens}/>
-          </TabsContent>
-          <TabsContent value="gestes">
-            <Bullets items={item.gestes}/>
-          </TabsContent>
-          <TabsContent value="bloc">
-            <Bullets items={item.bloc}/>
-          </TabsContent>
-          <TabsContent value="postop">
-            <Bullets items={item.postop}/>
-          </TabsContent>
-          <TabsContent value="rapport">
-            <div className="space-y-3">
-              <p className="text-sm">Points clés à documenter :</p>
-              <div className="flex flex-wrap gap-1">
-                {item.rapportPoints.map((p)=> (<Badge key={p} variant="secondary">{p}</Badge>))}
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={()=>onCompose(item)}><ClipboardList className="w-4 h-4 mr-2"/>Composer un rapport</Button>
-              </div>
-              <Separator/>
-              <p className="text-xs text-slate-500">Ajouts automatiques possibles :</p>
-              <div className="grid sm:grid-cols-3 gap-2">
-                {Object.keys(checklists).map(key => (
-                  <label key={key} className="flex items-center gap-2 text-sm">
-                    <Checkbox checked={includeChecklist[key]} onCheckedChange={(v)=>setIncludeChecklist(prev=>({...prev, [key]: !!v}))}/>
-                    <span>Inclure checklist {key}</span>
-                  </label>
-                ))}
-              </div>
+  <main class="max-w-7xl mx-auto px-4 py-6 grid lg:grid-cols-3 gap-6">
+    <!-- Colonne gauche: recherche + résultats -->
+    <section class="lg:col-span-2 space-y-4">
+      <div class="card p-4">
+        <div class="flex flex-col gap-3">
+          <div class="flex gap-2 items-center">
+            <div class="relative flex-1">
+              <input id="q" class="w-full border rounded-xl px-3 py-2 pl-9" placeholder="Rechercher: fracture, rachis, brûlure, valve…" />
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔎</span>
             </div>
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
-  );
-}
+            <button id="btnReset" class="btn btn-ghost">↺ Réinitialiser</button>
+            <details class="relative">
+              <summary class="btn btn-ghost cursor-pointer select-none">🔽 Catégories</summary>
+              <div class="absolute right-0 mt-2 w-64 card p-2 grid gap-1 z-10">
+                <div id="catList" class="grid gap-1"></div>
+              </div>
+            </details>
+          </div>
 
-function Bullets({ items }){
-  return (
-    <ul className="list-disc pl-5 space-y-1 text-sm">
-      {items.map((x, i)=> <li key={i}>{x}</li>)}
-    </ul>
-  );
-}
+          <div id="results" class="grid md:grid-cols-2 gap-3"></div>
+
+          <div id="detailsWrap"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Colonne droite: rapport -->
+    <aside class="space-y-4">
+      <div class="card p-4 sticky-col">
+        <div class="flex items-center gap-2 mb-2">
+          <span>📝</span>
+          <h2 class="text-base font-semibold">Rapport médical (générateur)</h2>
+        </div>
+        <textarea id="report" class="w-full min-h-[380px] border rounded-xl p-3 font-mono" placeholder="Clique sur \"Composer rapport\" depuis une fiche pour pré-remplir ici…"></textarea>
+        <div class="flex gap-2 justify-end mt-2">
+          <button id="btnCopy" class="btn btn-ghost">📋 Copier</button>
+          <button id="btnDownload" class="btn btn-primary">⬇️ Télécharger</button>
+        </div>
+        <hr class="my-3" />
+        <div>
+          <p class="text-sm font-medium">Inclure des checklists</p>
+          <label class="flex items-center gap-2 text-sm mt-1"><input type="checkbox" id="ckABCDE" checked> ABCDE</label>
+          <label class="flex items-center gap-2 text-sm mt-1"><input type="checkbox" id="ckThorax"> Trauma thorax</label>
+          <label class="flex items-center gap-2 text-sm mt-1"><input type="checkbox" id="ckBrules"> Brûlés</label>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="max-w-7xl mx-auto px-4 pb-8 text-xs text-slate-500">
+    <hr class="mb-3 border-slate-200" />
+    ⚠️ Outil de jeu — GTA RP. Procédures simplifiées et non prescriptives. Ce contenu ne constitue pas un conseil médical réel.
+  </footer>
+
+  <script>
+  // ------------------------------
+  // Données (synthèse RP)
+  // ------------------------------
+  const CATEGORIES = [
+    "Orthopédie/Os",
+    "Crâne/Neurochir",
+    "Rachis",
+    "Muscles/Tendons",
+    "Thorax",
+    "Cardiaque",
+    "Viscéral/Abdomen",
+    "Grands brûlés",
+    "Neurologie traumatique",
+  ];
+
+  const bank = [
+    {
+      id: "os-fix",
+      titre: "Réparation osseuse (broches/vis/plaques/pâte)",
+      categorie: "Orthopédie/Os",
+      tags: ["fracture", "broches", "vis", "plaques", "pâte osseuse"],
+      examens: [
+        "Inspection + douleur provoquée, déformation, plaie ouverte",
+        "Contrôle vasculo-nerveux distal (pouls, sensibilité, motricité)",
+        "Immobilisation provisoire (attelle) avant transport",
+        "Imagerie RP: radio/scan si dispo en service",
+      ],
+      gestes: [
+        "Hémostase locale si plaie",
+        "Attelle modelable, glace externe",
+        "Antalgie non chiffrée (RP)",
+        "Transport vers bloc si fracture instable/ouverte",
+      ],
+      bloc: [
+        "Broches/clous IM: réalignement + verrouillage",
+        "Plaques + vis anatomiques si fracture articulaire/complexe",
+        "Pâte/greffe osseuse si perte de substance",
+      ],
+      postop: [
+        "Contrôle vasculo-nerveux post-immobilisation",
+        "Imagerie de contrôle",
+        "Décharge/béquilles selon segment",
+      ],
+      rapportPoints: ["Os concerné", "Type de fracture", "Gestes d'urgence", "Fixation réalisée", "Surveillance"],
+    },
+    {
+      id: "crane",
+      titre: "Chirurgie crânienne (craniotomie / crânioplastie)",
+      categorie: "Crâne/Neurochir",
+      tags: ["TCC", "hématome", "craniotomie", "crânioplastie", "plaques crâniennes"],
+      examens: [
+        "Score de Glasgow, pupilles, déficit focal",
+        "Stabilisation cervicale jusqu'à imagerie",
+        "Scan crâne si dispo (RP)",
+      ],
+      gestes: [
+        "ABCDE avec surveillance G",
+        "Oxygénation, contrôle des convulsions si besoin (RP)",
+        "Préparation bloc si hématome compressif",
+      ],
+      bloc: [
+        "Craniotomie: volet + évacuation hématome",
+        "Plaques/vis titane pour refixation",
+        "Crânioplastie ou ciment (PMMA/hydroxyapatite) si défaut",
+      ],
+      postop: [
+        "Surveillance neuro rapprochée",
+        "Scan de contrôle",
+        "Prévention infection",
+      ],
+      rapportPoints: ["Mécanisme", "Glasgow", "Lésions scan", "Geste neurochir", "Évolution immédiate"],
+    },
+    {
+      id: "rachis",
+      titre: "Rachis (discectomie, laminectomie, fusion, foraminotomie)",
+      categorie: "Rachis",
+      tags: ["rachis", "hernie discale", "sténose", "fracture", "scoliose"],
+      examens: [
+        "Immobilisation stricte du rachis",
+        "Évaluation sensitivo-motrice et périnée",
+        "Scan/IRM selon RP",
+      ],
+      gestes: [
+        "Collier + plan dur",
+        "Antalgie prudente (RP)",
+        "Transport bloc si déficit évolutif/instabilité",
+      ],
+      bloc: [
+        "Discectomie si conflit disque-nerf",
+        "Laminectomie pour décompression",
+        "Fusion + vis/tiges, cage si instabilité",
+      ],
+      postop: ["Surveillance neuro", "Mobilisation encadrée", "Imagerie de contrôle"],
+      rapportPoints: ["Niveau lésionnel", "Déficit", "Imagerie", "Geste réalisé", "Stabilité finale"],
+    },
+    {
+      id: "muscle",
+      titre: "Rupture musculaire (partielle/complète)",
+      categorie: "Muscles/Tendons",
+      tags: ["déchirure", "rupture", "suture musculaire", "rééducation"],
+      examens: [
+        "Douleur localisée, hématome, déficit fonctionnel",
+        "Échelle douleur RP",
+        "Échographie si dispo",
+      ],
+      gestes: ["Repos, glace, compression, élévation (RICE)", "Immobilisation courte", "Antalgie RP"],
+      bloc: ["Suture des berges musculaires", "Renfort tendineux si besoin"],
+      postop: ["Immobilisation initiale", "Mobilisation douce", "Renforcement progressif"],
+      rapportPoints: ["Muscle atteint", "Type (partielle/complète)", "Gestes d'urgence", "Réparation", "Programme réhab"],
+    },
+    {
+      id: "thorax",
+      titre: "Chirurgie thoracique (lobe, médiastin, trachée, trauma)",
+      categorie: "Thorax",
+      tags: ["lobectomie", "pneumothorax", "hémothorax", "décortication", "trachéotomie"],
+      examens: ["Détresse respi?", "Auscultation, saturation", "Écho FAST/Radio si dispo"],
+      gestes: [
+        "Aiguille décompression si pneumo sous tension (RP)",
+        "Drain thoracique si indiqué (RP)",
+        "Oxygène et analgésie RP",
+      ],
+      bloc: [
+        "Lobectomie/segmentectomie selon lésion",
+        "Décortication pleurale",
+        "Trachéotomie si voie aérienne compromise",
+      ],
+      postop: ["Surveillance respi + drains", "Kiné respi", "Contrôle fuites d'air"],
+      rapportPoints: ["Mécanisme/Pathologie", "Côté atteint", "Gestes préhospitaliers", "Geste thoracique", "Drains"]
+    },
+    {
+      id: "cardiaque",
+      titre: "Cardiaque (pontage, valves, FA, DAV)",
+      categorie: "Cardiaque",
+      tags: ["pontage", "valve", "FA", "transplantation", "DAV"],
+      examens: ["Douleur thoracique?", "ECG si RP", "Écho si dispo"],
+      gestes: ["ABCDE + O2 si SpO2 basse", "Anti-douleur RP", "Prépa bloc si instabilité"],
+      bloc: ["Pontage coronarien", "Réparation/remplacement valvulaire", "Ablation/MAZE", "Implant DAV"],
+      postop: ["Surveillance en USIC/REA", "Prévention infection", "Rééducation cardiaque"],
+      rapportPoints: ["Diagnostic", "Geste cardiaque", "CPEC (REA/USIC)", "Évolution"],
+    },
+    {
+      id: "visc",
+      titre: "Viscéral/Abdomen (appendice, vésicule, hernie, résection…)",
+      categorie: "Viscéral/Abdomen",
+      tags: ["appendicite", "vésicule", "hernie", "résection", "gastrectomie", "bariatrique", "foie", "pancréas", "rate"],
+      examens: ["Douleur, défense/contracture", "N/V, transit", "FAST/Scan RP"],
+      gestes: ["Jeûne + VVP (RP)", "Antalgie RP", "Préparation bloc si abdomen aigu/trauma"],
+      bloc: [
+        "Appendicectomie (souvent coelio)",
+        "Cholécystectomie coelio",
+        "Herniorraphie/mesh",
+        "Résection intestinale ± stomie",
+        "Gastrectomie / sleeve",
+        "Hépatectomie partielle",
+        "Pancréatectomie (Whipple/distale)",
+        "Splénectomie",
+      ],
+      postop: ["Surveillance souillures/saignement", "Reprise du transit", "Douleur"],
+      rapportPoints: ["Organe", "Diagnostic", "Voie d'abord", "Geste", "Suites"],
+    },
+    {
+      id: "brules",
+      titre: "Grands brûlés",
+      categorie: "Grands brûlés",
+      tags: ["SCB", "Parkland", "greffe peau", "débridement"],
+      examens: [
+        "Évaluer profondeur + %SCB (règle des 9 / Lund-Browder RP)",
+        "Voies aériennes (inhalation?)",
+      ],
+      gestes: [
+        "Refroidir (pas de glace directe prolongée)",
+        "Retirer vêtements/objets chauds",
+        "Voie veineuse, réanimation liquidienne (RP, formule de Parkland en info seulement)",
+        "Antalgie RP",
+      ],
+      bloc: ["Débridement", "Greffes cutanées", "Pansements spécifiques"],
+      postop: ["Kiné + orthèses", "Suivi psycho", "Gestion cicatrices"],
+      rapportPoints: ["Mécanisme", "%SCB estimée", "Zones atteintes", "Gestes/initiaux", "Greffes"],
+    },
+    {
+      id: "neurotrauma",
+      titre: "Neurologie traumatique (TCC, moelle, nerfs périph.)",
+      categorie: "Neurologie traumatique",
+      tags: ["TCC", "lésion médullaire", "périphérique", "décompression"],
+      examens: ["ABCDE + Glasgow", "Immobilisation rachis", "Scan/IRM RP"],
+      gestes: ["Stabiliser VA/O2", "Prévenir hypotension/hypoxie", "Transport rapide vers spécialité"],
+      bloc: ["Craniotomie décompressive", "Fixation rachidienne", "Réparation nerveuse"],
+      postop: ["Rééducation pluridisciplinaire", "Prévention escarres/TVP", "Suivi long cours"],
+      rapportPoints: ["Type lésion", "Score GCS", "Gestes d'urgence", "Chirurgie", "Plan réhab"],
+    },
+  ];
+
+  const checklists = {
+    ABCDE: [
+      "A — Airway: perméabilité, collier si trauma",
+      "B — Breathing: FR, SpO2, auscultation, décompression si tension (RP)",
+      "C — Circulation: pouls, hémorragies, perfusion",
+      "D — Disability: Glasgow, pupilles, déficit",
+      "E — Exposure: déshabiller, température, lésions",
+    ],
+    TraumaThorax: [
+      "Inspection cage (emphysème SC, volet costal)",
+      "Percussion (hyper/tympanisme)",
+      "Auscultation (asymétrie)",
+      "Si détresse + déviation trachéale ⇒ décompression (RP)",
+    ],
+    Brules: [
+      "Arrêt agent vulnérant, refroidissement 10-20 min",
+      "Évaluer %SCB (RP)",
+      "Voies aériennes: suspicion inhalation",
+      "Couvrir stérile/film alimentaire (RP)",
+    ],
+  };
+
+  // ------------------------------
+  // Helpers
+  // ------------------------------
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+  function cx(...c){ return c.filter(Boolean).join(' '); }
+
+  function blobDownload(filename, text){
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function formatDate(){
+    const n = new Date();
+    const pad = (x)=> String(x).padStart(2,'0');
+    return `${pad(n.getDate())}/${pad(n.getMonth()+1)}/${n.getFullYear()} ${pad(n.getHours())}:${pad(n.getMinutes())}`;
+  }
+
+  function makeReport(item, include){
+    const checklistText = [
+      include.ABCDE ? `\nChecklist ABCDE:\n- ${checklists.ABCDE.join('\n- ')}` : '',
+      include.TraumaThorax ? `\nChecklist Trauma thorax:\n- ${checklists.TraumaThorax.join('\n- ')}` : '',
+      include.Brules ? `\nChecklist Brûlés:\n- ${checklists.Brules.join('\n- ')}` : '',
+    ].filter(Boolean).join('\n');
+
+    return `RAPPORT MÉDICAL — Chirurgie complexe (RP)\nDate/Heure: ${formatDate()}\n\nPatient: __________________  Âge: __  Sexe: __  ID RP: ________\nMéca/Contexte: _________________________________________________\n\nCATÉGORIE: ${item.categorie}\nCAS: ${item.titre}\n\nEXAMENS:\n- ${item.examens.join('\n- ')}\n\nGESTES INITIAUX:\n- ${item.gestes.join('\n- ')}\n\nBLOC/OPÉRATION:\n- ${item.bloc.join('\n- ')}\n\nPOST-OP / SURVEILLANCE:\n- ${item.postop.join('\n- ')}\n${checklistText}\n\nPOINTS CLÉS À DOCUMENTER:\n- ${item.rapportPoints.join('\n- ')}\n\nRemarques complémentaires: _____________________________________\nSignature: __________`;
+  }
+
+  // ------------------------------
+  // UI rendering
+  // ------------------------------
+  const state = {
+    q: '',
+    catFilter: new Set(CATEGORIES),
+    selectedId: null,
+  };
+
+  function renderCategories(){
+    const box = $('#catList');
+    box.innerHTML = '';
+    CATEGORIES.forEach(cat => {
+      const id = `cat-${cat.replace(/[^a-z0-9]/gi,'_')}`;
+      const row = document.createElement('label');
+      row.className = 'flex items-center gap-2 text-sm px-2 py-1 rounded hover:bg-slate-50';
+      row.innerHTML = `<input type="checkbox" id="${id}" ${state.catFilter.has(cat)?'checked':''}/> <span>${cat}</span>`;
+      row.querySelector('input').addEventListener('change', (e)=>{
+        if(e.target.checked) state.catFilter.add(cat); else state.catFilter.delete(cat);
+        renderResults();
+      });
+      box.appendChild(row);
+    });
+  }
+
+  function filterData(){
+    const q = state.q.trim().toLowerCase();
+    return bank.filter(it => state.catFilter.has(it.categorie) && (!q || it.titre.toLowerCase().includes(q) || it.tags.join(' ').toLowerCase().includes(q)) );
+  }
+
+  function renderResults(){
+    const list = $('#results');
+    list.innerHTML = '';
+    const data = filterData();
+    data.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'card p-3';
+      card.innerHTML = `
+        <div class="text-sm font-semibold">${item.titre}</div>
+        <div class="flex flex-wrap gap-1 mt-1">
+          <span class="badge">${item.categorie}</span>
+          ${item.tags.slice(0,3).map(t => `<span class='badge'>${t}</span>`).join('')}
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button class="btn btn-primary" data-action="compose">🧾 Composer rapport</button>
+          <button class="btn btn-ghost" data-action="details">📋 Voir détails</button>
+        </div>
+      `;
+      card.querySelector('[data-action="compose"]').addEventListener('click', ()=>composeReport(item));
+      card.querySelector('[data-action="details"]').addEventListener('click', ()=>showDetails(item));
+      list.appendChild(card);
+    });
+  }
+
+  function showDetails(item){
+    state.selectedId = item.id;
+    const wrap = $('#detailsWrap');
+    wrap.innerHTML = '';
+    const card = document.createElement('div');
+    card.className = 'card p-4';
+    card.innerHTML = `
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-semibold">Détails — ${item.titre}</h3>
+        <button class="btn btn-primary" id="btnCompose2">🧾 Composer un rapport</button>
+      </div>
+      <div class="tabs mt-3 flex flex-wrap gap-2">
+        <button data-tab="examens" class="active">Examens</button>
+        <button data-tab="gestes">Gestes</button>
+        <button data-tab="bloc">Bloc</button>
+        <button data-tab="postop">Post-op</button>
+        <button data-tab="rapport">Rapport</button>
+      </div>
+      <div id="tabContent" class="mt-3"></div>
+      <hr class="my-3"/>
+      <p class="text-xs text-slate-500">Ajouts automatiques possibles :</p>
+      <div class="grid sm:grid-cols-3 gap-2 mt-1 text-sm">
+        <label class="flex items-center gap-2"><input type="checkbox" id="incABCDE" ${$('#ckABCDE').checked?'checked':''}/> Inclure checklist ABCDE</label>
+        <label class="flex items-center gap-2"><input type="checkbox" id="incThorax" ${$('#ckThorax').checked?'checked':''}/> Inclure checklist Trauma thorax</label>
+        <label class="flex items-center gap-2"><input type="checkbox" id="incBrules" ${$('#ckBrules').checked?'checked':''}/> Inclure checklist Brûlés</label>
+      </div>
+    `;
+    card.querySelector('#btnCompose2').addEventListener('click', ()=>composeReport(item));
+    const tabs = card.querySelectorAll('[data-tab]');
+    tabs.forEach(btn => btn.addEventListener('click', () => {
+      tabs.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderTab(btn.getAttribute('data-tab'));
+    }));
+
+    function renderTab(name){
+      const c = card.querySelector('#tabContent');
+      const bullets = (arr)=> `<ul class='list-dash space-y-1 text-sm'>${arr.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+      if(name==='examens') c.innerHTML = bullets(item.examens);
+      if(name==='gestes')  c.innerHTML = bullets(item.gestes);
+      if(name==='bloc')    c.innerHTML = bullets(item.bloc);
+      if(name==='postop')  c.innerHTML = bullets(item.postop);
+      if(name==='rapport') c.innerHTML = `
+        <p class='text-sm mb-2'>Points clés à documenter :</p>
+        <div class='flex flex-wrap gap-1'>${item.rapportPoints.map(p=>`<span class='badge'>${p}</span>`).join('')}</div>
+      `;
+    }
+    renderTab('examens');
+    wrap.appendChild(card);
+    window.scrollTo({ top: card.offsetTop - 80, behavior: 'smooth' });
+  }
+
+  function composeReport(item){
+    const include = {
+      ABCDE: $('#incABCDE') ? $('#incABCDE').checked : $('#ckABCDE').checked,
+      TraumaThorax: $('#incThorax') ? $('#incThorax').checked : $('#ckThorax').checked,
+      Brules: $('#incBrules') ? $('#incBrules').checked : $('#ckBrules').checked,
+    };
+    const text = makeReport(item, include);
+    const ta = $('#report');
+    ta.value = text;
+    localStorage.setItem('gta_rp_chir_report', text);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ------------------------------
+  // Events init
+  // ------------------------------
+  $('#q').addEventListener('input', (e)=>{ state.q = e.target.value; renderResults(); });
+  $('#btnReset').addEventListener('click', ()=>{ state.q=''; $('#q').value=''; state.catFilter = new Set(CATEGORIES); renderCategories(); renderResults(); });
+
+  $('#btnCopy').addEventListener('click', async ()=>{
+    try { await navigator.clipboard.writeText($('#report').value || ''); } catch{}
+  });
+  $('#btnDownload').addEventListener('click', ()=> blobDownload('rapport_chirurgie_RP.txt', $('#report').value || ''));
+
+  // checkbox defaults
+  ['ckABCDE','ckThorax','ckBrules'].forEach(id => {
+    $('#'+id).addEventListener('change', ()=>{
+      if(state.selectedId){
+        const item = bank.find(b=>b.id===state.selectedId);
+        if(item) composeReport(item);
+      }
+    });
+  });
+
+  // Restore cached report
+  const cached = localStorage.getItem('gta_rp_chir_report');
+  if(cached) $('#report').value = cached;
+
+  // First render
+  renderCategories();
+  renderResults();
+  </script>
+</body>
+</html>
