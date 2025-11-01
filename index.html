@@ -103,31 +103,17 @@
           <span>📝</span>
           <h2 class="text-base font-semibold">Rapport médical (générateur)</h2>
         </div>
-        <textarea id="report" class="w-full min-h-[380px] field font-mono" placeholder="Clique sur \"Composer rapport\" depuis une fiche pour pré-remplir ici…"></textarea>
+        <textarea id="report" class="w-full min-h-[380px] field font-mono" placeholder="Clique sur &quot;Composer rapport&quot; depuis une fiche pour pré-remplir ici…"></textarea>
         <div class="flex gap-2 justify-end mt-2">
           <button id="btnCopy" class="btn btn-ghost">📋 Copier</button>
           <button id="btnDownload" class="btn btn-primary">⬇️ Télécharger</button>
         </div>
-        <hr class="my-3 border-[var(--border)]" />
-        <div>
-          <p class="text-sm font-medium">Inclure des checklists</p>
-          <label class="flex items-center gap-2 text-sm mt-1"><input type="checkbox" id="ckABCDE" checked> ABCDE</label>
-          <label class="flex items-center gap-2 text-sm mt-1"><input type="checkbox" id="ckThorax"> Trauma thorax</label>
-          <label class="flex items-center gap-2 text-sm mt-1"><input type="checkbox" id="ckBrules"> Brûlés</label>
-          <p class="text-xs opacity-70 mt-2">Astuce : appuie sur <span class="kbd">t</span> pour basculer le thème à tout moment.</p>
-        </div>
+        <hr class="my-3" style="border-color:var(--border)" />
+        <p class="text-sm" style="color:var(--muted)">
+          Le rapport généré contient uniquement : <b>BLOC/OPÉRATION</b> et <b>POST-OP / SURVEILLANCE</b>.
+        </p>
       </div>
-    </aside>
-  </main>
-
-  <footer class="max-w-7xl mx-auto px-4 pb-8 text-xs" style="color:var(--muted)">
-    <hr class="mb-3" style="border-color:var(--border)" />
-    ⚠️ Outil de jeu — GTA RP. Procédures simplifiées et non prescriptives. Ce contenu ne constitue pas un conseil médical réel.
-  </footer>
-
-  <template id="skeletonCard">
-    <div class="card p-3 animate-pulse">
-      <div class="h-4 rounded bg-[var(--chip)] w-3/4"></div>
+    </aside> bg-[var(--chip)] w-3/4"></div>
       <div class="flex gap-1 mt-2">
         <div class="h-5 w-16 rounded bg-[var(--chip)]"></div>
         <div class="h-5 w-14 rounded bg-[var(--chip)]"></div>
@@ -243,9 +229,46 @@
   const $ = (sel) => document.querySelector(sel);
   function blobDownload(filename, text){ const blob = new Blob([text], { type: 'text/plain;charset=utf-8' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url); }
   function formatDate(){ const n = new Date(); const pad = (x)=> String(x).padStart(2,'0'); return `${pad(n.getDate())}/${pad(n.getMonth()+1)}/${n.getFullYear()} ${pad(n.getHours())}:${pad(n.getMinutes())}`; }
-  function makeReport(item, include){
-    const checklistText = [ include.ABCDE ? `\nChecklist ABCDE:\n- ${checklists.ABCDE.join('\n- ')}` : '', include.TraumaThorax ? `\nChecklist Trauma thorax:\n- ${checklists.TraumaThorax.join('\n- ')}` : '', include.Brules ? `\nChecklist Brûlés:\n- ${checklists.Brules.join('\n- ')}` : '' ].filter(Boolean).join('\n');
-    return `RAPPORT MÉDICAL — Chirurgie complexe (RP)\nDate/Heure: ${formatDate()}\n\nPatient: __________________  Âge: __  Sexe: __  ID RP: ________\nMéca/Contexte: _________________________________________________\n\nCATÉGORIE: ${item.categorie}\nCAS: ${item.titre}\n\nEXAMENS:\n- ${item.examens.join('\n- ')}\n\nGESTES INITIAUX:\n- ${item.gestes.join('\n- ')}\n\nBLOC/OPÉRATION:\n- ${item.bloc.join('\n- ')}\n\nPOST-OP / SURVEILLANCE:\n- ${item.postop.join('\n- ')}\n${checklistText}\n\nPOINTS CLÉS À DOCUMENTER:\n- ${item.rapportPoints.join('\n- ')}\n\nRemarques complémentaires: _____________________________________\nSignature: __________`;
+  function makeReport(item){
+    return `BLOC/OPÉRATION:\n- ${item.bloc.join('\n- ')}\n\nPOST-OP / SURVEILLANCE:\n- ${item.postop.join('\n- ')}`;
+  }` : '', include.TraumaThorax ? `
+Checklist Trauma thorax:
+- ${checklists.TraumaThorax.join('
+- ')}` : '', include.Brules ? `
+Checklist Brûlés:
+- ${checklists.Brules.join('
+- ')}` : '' ].filter(Boolean).join('
+');
+    return `RAPPORT MÉDICAL — Chirufunction makeReport(item){
+    return `BLOC/OPÉRATION:\n- ${item.bloc.join('\n- ')}\n\nPOST-OP / SURVEILLANCE:\n- ${item.postop.join('\n- ')}`;
+  }____________________________________________
+
+CATÉGORIE: ${item.categorie}
+CAS: ${item.titre}
+
+EXAMENS:
+- ${item.examens.join('
+- ')}
+
+GESTES INITIAUX:
+- ${item.gestes.join('
+- ')}
+
+BLOC/OPÉRATION:
+- ${item.bloc.join('
+- ')}
+
+POST-OP / SURVEILLANCE:
+- ${item.postop.join('
+- ')}
+${checklistText}
+
+POINTS CLÉS À DOCUMENTER:
+- ${item.rapportPoints.join('
+- ')}
+
+Remarques complémentaires: _____________________________________
+Signature: __________`;
   }
 
   // ------------------------------
@@ -335,18 +358,7 @@
       <p class="text-xs" style="color:var(--muted)">Ajouts automatiques possibles :</p>
       <div class="grid sm:grid-cols-3 gap-2 mt-1 text-sm">
         <label class="flex items-center gap-2"><input type="checkbox" id="incABCDE" ${document.getElementById('ckABCDE').checked?'checked':''}/> Inclure checklist ABCDE</label>
-        <label class="flex items-center gap-2"><input type="checkbox" id="incThorax" ${document.getElementById('ckThorax').checked?'checked':''}/> Inclure checklist Trauma thorax</label>
-        <label class="flex items-center gap-2"><input type="checkbox" id="incBrules" ${document.getElementById('ckBrules').checked?'checked':''}/> Inclure checklist Brûlés</label>
-      </div>
-    `;
-    card.querySelector('#btnCompose2').addEventListener('click', ()=>composeReport(item));
-    const tabs = card.querySelectorAll('[data-tab]');
-    tabs.forEach(btn => btn.addEventListener('click', () => {
-      tabs.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      renderTab(btn.getAttribute('data-tab'));
-    }));
-    function bullets(arr){ return `<ul class='list-dash space-y-1 text-sm'>${arr.map(x=>`<li>${x}</li>`).join('')}</ul>`; }
+        <label class="flex items-center gap-2"><input type="chs(arr){ return `<ul class='list-dash space-y-1 text-sm'>${arr.map(x=>`<li>${x}</li>`).join('')}</ul>`; }
     function renderTab(name){
       const c = card.querySelector('#tabContent');
       if(name==='examens') c.innerHTML = bullets(item.examens);
@@ -364,19 +376,7 @@
     const include = {
       ABCDE: document.getElementById('incABCDE') ? document.getElementById('incABCDE').checked : document.getElementById('ckABCDE').checked,
       TraumaThorax: document.getElementById('incThorax') ? document.getElementById('incThorax').checked : document.getElementById('ckThorax').checked,
-      Brules: document.getElementById('incBrules') ? document.getElementById('incBrules').checked : document.getElementById('ckBrules').checked,
-    };
-    const text = makeReport(item, include);
-    const ta = document.getElementById('report');
-    ta.value = text;
-    localStorage.setItem('gta_rp_chir_report', text);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  // ------------------------------
-  // Events init
-  // ------------------------------
-  document.getElementById('q').addEventListener('input', (e)=>{ state.q = e.target.value; renderResults(); });
+      Brules: document.getElementById('incBrules') ? document.getElemeconst text = makeReport(item);});
   document.getElementById('btnReset').addEventListener('click', ()=>{ state.q=''; document.getElementById('q').value=''; state.catFilter = new Set(CATEGORIES); renderCategories(); renderResults(); });
   document.getElementById('btnCopy').addEventListener('click', async ()=>{ try { await navigator.clipboard.writeText(document.getElementById('report').value || ''); } catch{} });
   document.getElementById('btnDownload').addEventListener('click', ()=> blobDownload('rapport_chirurgie_RP.txt', document.getElementById('report').value || ''));
@@ -386,10 +386,4 @@
 
   const cached = localStorage.getItem('gta_rp_chir_report'); if(cached) document.getElementById('report').value = cached;
 
-  // First render with skeleton placeholder for nicer visual
-  renderCategories();
-  skeleton(4);
-  setTimeout(renderResults, 250);
-  </script>
-</body>
-</html>
+  // First render with skeleto
