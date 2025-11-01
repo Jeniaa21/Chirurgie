@@ -212,11 +212,11 @@
   function blobDownload(filename, text){ const blob=new Blob([text],{type:'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href); }
 
   function makeReport(item, selectedProcId){
-    const proc=(item.procedures||[]).find(p=>p.id===selectedProcId);
-    const bloc=proc? proc.bloc : item.bloc;
-    const postop=proc? proc.postop : item.postop;
-    const titleLine=proc? `Type d'intervention : ${proc.label}\\n\\n` : '';
-    return `${titleLine}BLOC/OPÉRATION:\\n- ${bloc.join('\\n- ')}\\n\\nPOST-OP / SURVEILLANCE:\\n- ${postop.join('\\n- ')}`;
+    const proc = (item.procedures||[]).find(p=>p.id===selectedProcId);
+    const bloc = proc ? proc.bloc : item.bloc;
+    const postop = proc ? proc.postop : item.postop;
+    const titleLine = proc ? `Type d'intervention : ${proc.label}\n\n` : '';
+    return `${titleLine}BLOC/OPÉRATION:\n- ${bloc.join('\n- ')}\n\nPOST-OP / SURVEILLANCE:\n- ${postop.join('\n- ')}`;
   }
 
   const state={ q:'', selectedId:null, selectedProc:{} };
