@@ -1,609 +1,474 @@
-<!doctype html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>RP — Guide Opératoire Chirurgie</title>
-  <style>
-    :root{
-      --bg:#0f172a; --card:#0b1220; --text:#e2e8f0; --muted:#94a3b8;
-      --accent:#6366f1; --accent2:#22c55e; --warn:#f59e0b; --danger:#ef4444;
-      --border:#1f2937; --chip:#111827;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica Neue,Arial;
-      background:radial-gradient(1200px 600px at 20% -10%,#1e293b 0,#0b1020 60%,#060913 100%);color:var(--text)}
-    .container{max-width:1000px;margin:40px auto;padding:0 16px}
-    header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
-    .brand{display:flex;align-items:center;gap:12px}
-    .logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#8b5cf6);box-shadow:0 10px 25px rgba(99,102,241,.35)}
-    h1{font-size:clamp(22px,3vw,28px);margin:0;letter-spacing:.2px}
-    .pill{font-size:12px;padding:6px 10px;border:1px solid #334155;border-radius:999px;color:#a5b4fc;background:rgba(99,102,241,.08)}
-    .btn{background:var(--accent);color:#fff;border:none;padding:10px 14px;border-radius:14px;cursor:pointer;font-weight:600;letter-spacing:.2px}
-    .btn.secondary{background:transparent;border:1px solid #334155;color:var(--text)}
-    .btn.ghost{background:transparent;color:var(--muted)}
-    .grid{display:grid;grid-template-columns:1fr;gap:16px}
-    @media(min-width:900px){.grid{grid-template-columns:1.05fr .95fr}}
-    .card{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.015));border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
-    label{font-size:14px;color:var(--muted);display:block;margin-bottom:6px}
-    select,textarea,input[type="text"]{width:100%;background:#0a0f1b;color:var(--text);border:1px solid #192133;padding:10px 12px;border-radius:12px;outline:none}
-    select:focus,textarea:focus,input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.25)}
-    .row{display:flex;flex-wrap:wrap;gap:12px}
-    .chip{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:var(--chip);border:1px solid #1f2937;font-size:14px}
-    .section-title{font-size:18px;font-weight:700;margin:6px 0 10px}
-    .titlebar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
-    .results{display:grid;gap:12px}
-    .block{border:1px solid #1f2937;border-left:4px solid var(--accent);padding:12px;border-radius:12px;background:#0a0f1b}
-    .block.success{border-left-color:var(--accent2)}
-    .block.warn{border-left-color:var(--warn)}
-    .block.danger{border-left-color:var(--danger)}
-    .kbd{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;background:#0b1220;border:1px solid #1f2937;padding:2px 6px;border-radius:6px}
-    .muted{color:var(--muted)}
-    .sub{font-weight:700;margin-bottom:6px}
-    footer{margin-top:16px;color:#94a3b8;font-size:12px}
-    .two{display:grid;grid-template-columns:1fr;gap:12px}@media(min-width:720px){.two{grid-template-columns:1fr 1fr}}
-    .thinline{height:1px;background:#1f2937;margin:10px 0}
-    .right{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  </style>
-</head>
-<body>
-  <div class="container">
-    <header>
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <div>
-          <h1>Guide Opératoire — Chirurgie (RP)</h1>
-          <div class="pill" aria-live="polite">Orientation sur scène & bloc · RP uniquement</div>
+import React, { useMemo, useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuCheckboxItem, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
+import { Copy, Download, Search, ListChecks, ClipboardList, Stethoscope, Activity, FileText, Filter, RotateCcw } from "lucide-react";
+
+// ------------------------------
+// Données cliniques (synthèse RP)
+// ------------------------------
+
+// ⚠️ NOTE IMPORTANTE (RP):
+// Ce contenu est pensé pour le jeu de rôle (GTA RP) uniquement. 
+// Il NE REMPLACE PAS un avis médical réel. Aucune posologie n'est fournie.
+
+const CATEGORIES = [
+  "Orthopédie/Os",
+  "Crâne/Neurochir",
+  "Rachis",
+  "Muscles/Tendons",
+  "Thorax",
+  "Cardiaque",
+  "Viscéral/Abdomen",
+  "Grands brûlés",
+  "Neurologie traumatique",
+];
+
+const bank = [
+  {
+    id: "os-fix",
+    titre: "Réparation osseuse (broches/vis/plaques/pâte)",
+    categorie: "Orthopédie/Os",
+    tags: ["fracture", "broches", "vis", "plaques", "pâte osseuse"],
+    examens: [
+      "Inspection + douleur provoquée, déformation, plaie ouverte",
+      "Contrôle vasculo-nerveux distal (pouls, sensibilité, motricité)",
+      "Immobilisation provisoire (attelle) avant transport",
+      "Imagerie RP: radio/scan si dispo en service",
+    ],
+    gestes: [
+      "Hémostase locale si plaie",
+      "Attelle modelable, glace externe",
+      "Antalgie non chiffrée (RP)",
+      "Transport vers bloc si fracture instable/ouverte",
+    ],
+    bloc: [
+      "Broches/clous IM: réalignement + verrouillage",
+      "Plaques + vis anatomiques si fracture articulaire/complexe",
+      "Pâte/greffe osseuse si perte de substance",
+    ],
+    postop: [
+      "Contrôle vasculo-nerveux post-immobilisation",
+      "Imagerie de contrôle",
+      "Décharge/béquilles selon segment",
+    ],
+    rapportPoints: ["Os concerné", "Type de fracture", "Gestes d'urgence", "Fixation réalisée", "Surveillance"],
+  },
+  {
+    id: "crane",
+    titre: "Chirurgie crânienne (craniotomie / crânioplastie)",
+    categorie: "Crâne/Neurochir",
+    tags: ["TCC", "hématome", "craniotomie", "crânioplastie", "plaques crâniennes"],
+    examens: [
+      "Score de Glasgow, pupilles, déficit focal",
+      "Stabilisation cervicale jusqu'à imagerie",
+      "Scan crâne si dispo (RP)",
+    ],
+    gestes: [
+      "ABCDE avec surveillance G",
+      "Oxygénation, contrôle des convulsions si besoin (RP)",
+      "Préparation bloc si hématome compressif",
+    ],
+    bloc: [
+      "Craniotomie: volet + évacuation hématome",
+      "Plaques/vis titane pour refixation",
+      "Crânioplastie ou ciment (PMMA/hydroxyapatite) si défaut",
+    ],
+    postop: [
+      "Surveillance neuro rapprochée",
+      "Scan de contrôle",
+      "Prévention infection",
+    ],
+    rapportPoints: ["Mécanisme", "Glasgow", "Lésions scan", "Geste neurochir", "Évolution immédiate"],
+  },
+  {
+    id: "rachis",
+    titre: "Rachis (discectomie, laminectomie, fusion, foraminotomie)",
+    categorie: "Rachis",
+    tags: ["rachis", "hernie discale", "sténose", "fracture", "scoliose"],
+    examens: [
+      "Immobilisation stricte du rachis",
+      "Évaluation sensitivo-motrice et périnée",
+      "Scan/IRM selon RP",
+    ],
+    gestes: [
+      "Collier + plan dur",
+      "Antalgie prudente (RP)",
+      "Transport bloc si déficit évolutif/instabilité",
+    ],
+    bloc: [
+      "Discectomie si conflit disque-nerf",
+      "Laminectomie pour décompression",
+      "Fusion + vis/tiges, cage si instabilité",
+    ],
+    postop: ["Surveillance neuro", "Mobilisation encadrée", "Imagerie de contrôle"],
+    rapportPoints: ["Niveau lésionnel", "Déficit", "Imagerie", "Geste réalisé", "Stabilité finale"],
+  },
+  {
+    id: "muscle",
+    titre: "Rupture musculaire (partielle/complète)",
+    categorie: "Muscles/Tendons",
+    tags: ["déchirure", "rupture", "suture musculaire", "rééducation"],
+    examens: [
+      "Douleur localisée, hématome, déficit fonctionnel",
+      "Échelle douleur RP",
+      "Échographie si dispo",
+    ],
+    gestes: ["Repos, glace, compression, élévation (RICE)", "Immobilisation courte", "Antalgie RP"],
+    bloc: ["Suture des berges musculaires", "Renfort tendineux si besoin"],
+    postop: ["Immobilisation initiale", "Mobilisation douce", "Renforcement progressif"],
+    rapportPoints: ["Muscle atteint", "Type (partielle/complète)", "Gestes d'urgence", "Réparation", "Programme réhab"],
+  },
+  {
+    id: "thorax",
+    titre: "Chirurgie thoracique (lobe, médiastin, trachée, trauma)",
+    categorie: "Thorax",
+    tags: ["lobectomie", "pneumothorax", "hémothorax", "décortication", "trachéotomie"],
+    examens: ["Détresse respi?", "Auscultation, saturation", "Écho FAST/Radio si dispo"],
+    gestes: [
+      "Aiguille décompression si pneumo sous tension (RP)",
+      "Drain thoracique si indiqué (RP)",
+      "Oxygène et analgésie RP",
+    ],
+    bloc: [
+      "Lobectomie/segmentectomie selon lésion",
+      "Décortication pleurale",
+      "Trachéotomie si voie aérienne compromise",
+    ],
+    postop: ["Surveillance respi + drains", "Kiné respi", "Contrôle fuites d'air"],
+    rapportPoints: ["Mécanisme/Pathologie", "Côté atteint", "Gestes préhospitaliers", "Geste thoracique", "Drains"]
+  },
+  {
+    id: "cardiaque",
+    titre: "Cardiaque (pontage, valves, FA, DAV)",
+    categorie: "Cardiaque",
+    tags: ["pontage", "valve", "FA", "transplantation", "DAV"],
+    examens: ["Douleur thoracique?", "ECG si RP", "Écho si dispo"],
+    gestes: ["ABCDE + O2 si SpO2 basse", "Anti-douleur RP", "Prépa bloc si instabilité"],
+    bloc: ["Pontage coronarien", "Réparation/remplacement valvulaire", "Ablation/MAZE", "Implant DAV"],
+    postop: ["Surveillance en USIC/REA", "Prévention infection", "Rééducation cardiaque"],
+    rapportPoints: ["Diagnostic", "Geste cardiaque", "CPEC (REA/USIC)", "Évolution"],
+  },
+  {
+    id: "visc",
+    titre: "Viscéral/Abdomen (appendice, vésicule, hernie, résection…)",
+    categorie: "Viscéral/Abdomen",
+    tags: ["appendicite", "vésicule", "hernie", "résection", "gastrectomie", "bariatrique", "foie", "pancréas", "rate"],
+    examens: ["Douleur, défense/contracture", "N/V, transit", "FAST/Scan RP"],
+    gestes: ["Jeûne + VVP (RP)", "Antalgie RP", "Préparation bloc si abdomen aigu/trauma"],
+    bloc: [
+      "Appendicectomie (souvent coelio)",
+      "Cholécystectomie coelio",
+      "Herniorraphie/mesh",
+      "Résection intestinale ± stomie",
+      "Gastrectomie / sleeve",
+      "Hépatectomie partielle",
+      "Pancréatectomie (Whipple/distale)",
+      "Splénectomie",
+    ],
+    postop: ["Surveillance souillures/saignement", "Reprise du transit", "Douleur"],
+    rapportPoints: ["Organe", "Diagnostic", "Voie d'abord", "Geste", "Suites"],
+  },
+  {
+    id: "brules",
+    titre: "Grands brûlés",
+    categorie: "Grands brûlés",
+    tags: ["SCB", "Parkland", "greffe peau", "débridement"],
+    examens: [
+      "Évaluer profondeur + %SCB (règle des 9 / Lund-Browder RP)",
+      "Voies aériennes (inhalation?)",
+    ],
+    gestes: [
+      "Refroidir (pas de glace directe prolongée)",
+      "Retirer vêtements/objets chauds",
+      "Voie veineuse, réanimation liquidienne (RP, formule de Parkland en info seulement)",
+      "Antalgie RP",
+    ],
+    bloc: ["Débridement", "Greffes cutanées", "Pansements spécifiques"],
+    postop: ["Kiné + orthèses", "Suivi psycho", "Gestion cicatrices"],
+    rapportPoints: ["Mécanisme", "%SCB estimée", "Zones atteintes", "Gestes/initiaux", "Greffes"],
+  },
+  {
+    id: "neurotrauma",
+    titre: "Neurologie traumatique (TCC, moelle, nerfs périph.)",
+    categorie: "Neurologie traumatique",
+    tags: ["TCC", "lésion médullaire", "périphérique", "décompression"],
+    examens: ["ABCDE + Glasgow", "Immobilisation rachis", "Scan/IRM RP"],
+    gestes: ["Stabiliser VA/O2", "Prévenir hypotension/hypoxie", "Transport rapide vers spécialité"],
+    bloc: ["Craniotomie décompressive", "Fixation rachidienne", "Réparation nerveuse"],
+    postop: ["Rééducation pluridisciplinaire", "Prévention escarres/TVP", "Suivi long cours"],
+    rapportPoints: ["Type lésion", "Score GCS", "Gestes d'urgence", "Chirurgie", "Plan réhab"],
+  },
+];
+
+const checklists = {
+  ABCDE: [
+    "A — Airway: perméabilité, colliers si trauma",
+    "B — Breathing: FR, SpO2, auscultation, désamorcer pneumo si tension (RP)",
+    "C — Circulation: pouls, hémorragies, perfusion",
+    "D — Disability: Glasgow, pupilles, déficit",
+    "E — Exposure: déshabiller, température, recherche lésions",
+  ],
+  TraumaThorax: [
+    "Inspection cage (emphysème sous-cutané, volet costal)",
+    "Percussion (hypersonorité/tympanisme)",
+    "Auscultation (asymétrie)",
+    "Si détresse + déviation trachéale ⇒ décompression (RP)",
+  ],
+  Brules: [
+    "Arrêt agent vulnérant, refroidissement 10-20 min",
+    "Évaluer %SCB (RP)",
+    "Voies aériennes: fumées, raucité, suie",
+    "Couvrir stérile/film alimentaire (RP)",
+  ],
+};
+
+// ------------------------------
+// Utilitaires
+// ------------------------------
+
+function cx(...cls){ return cls.filter(Boolean).join(" "); }
+
+function downloadText(filename, text){
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ------------------------------
+// Composant principal
+// ------------------------------
+
+export default function App(){
+  const [q, setQ] = useState("");
+  const [catFilter, setCatFilter] = useState(CATEGORIES);
+  const [selected, setSelected] = useState(null);
+  const [report, setReport] = useState("");
+  const [includeChecklist, setIncludeChecklist] = useState({ ABCDE: true, TraumaThorax: false, Brules: false });
+
+  useEffect(()=>{
+    const cached = localStorage.getItem("gta_rp_chir_report");
+    if(cached) setReport(cached);
+  },[]);
+  useEffect(()=>{
+    localStorage.setItem("gta_rp_chir_report", report);
+  },[report]);
+
+  const filtered = useMemo(()=>{
+    const lower = q.toLowerCase();
+    return bank.filter(it =>
+      catFilter.includes(it.categorie) && (
+        !lower || it.titre.toLowerCase().includes(lower) || it.tags.join(" ").toLowerCase().includes(lower)
+      )
+    );
+  }, [q, catFilter]);
+
+  function makeReport(item){
+    const now = new Date();
+    const pad = (n)=> String(n).padStart(2,"0");
+    const dateStr = `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+    const checklistText = Object.entries(includeChecklist)
+      .filter(([k,v])=>v)
+      .map(([k])=>`\nChecklist ${k}:\n- ` + checklists[k].join("\n- "))
+      .join("\n");
+
+    return `RAPPORT MÉDICAL — Chirurgie complexe (RP)\nDate/Heure: ${dateStr}\n\nPatient: __________________  Âge: __  Sexe: __  ID RP: ________\nMéca/Contexte: _________________________________________________\n\nCATÉGORIE: ${item.categorie}\nCAS: ${item.titre}\n\nEXAMENS:\n- ${item.examens.join("\n- ")}\n\nGESTES INITIAUX:\n- ${item.gestes.join("\n- ")}\n\nBLOC/OPÉRATION:\n- ${item.bloc.join("\n- ")}\n\nPOST-OP / SURVEILLANCE:\n- ${item.postop.join("\n- ")}\n${checklistText}\n\nPOINTS CLÉS À DOCUMENTER:\n- ${item.rapportPoints.join("\n- ")}\n\nRemarques complémentaires: _____________________________________\nSignature: __________`;
+  }
+
+  function handleCompose(item){
+    const base = makeReport(item);
+    setReport(base);
+    setSelected(item.id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function resetFilters(){ setQ(""); setCatFilter(CATEGORIES); }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-slate-900">
+      <header className="sticky top-0 z-30 backdrop-blur bg-white/70 border-b">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
+          <Stethoscope className="w-6 h-6" />
+          <h1 className="text-xl font-semibold">Chirurgie Complexe — Guide RP</h1>
+          <Badge variant="secondary" className="ml-auto">Hôpital — GTA RP</Badge>
         </div>
-      </div>
-      <div class="right">
-        <button class="btn ghost" id="btn-start" title="Mémoriser l'heure de début">🕒 Début intervention</button>
-        <span class="pill" id="start-pill">Début: —</span>
-        <button class="btn ghost" id="btn-export">Exporter</button>
-        <button class="btn ghost" id="btn-print">Imprimer</button>
-      </div>
-    </header>
+      </header>
 
-    <div class="grid">
-      <!-- FORM -->
-      <section class="card" aria-labelledby="form-title">
-        <div class="titlebar">
-          <div class="section-title" id="form-title">Cas & choix opératoires</div>
-          <div class="muted">Remplissez puis cliquez <span class="kbd">Générer</span></div>
-        </div>
+      <main className="max-w-7xl mx-auto px-4 py-6 grid lg:grid-cols-3 gap-6">
+        {/* Colonne gauche: Recherche + Filtres + Résultats */}
+        <section className="lg:col-span-2 space-y-4">
+          <Card className="shadow-sm">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Chercher une blessure / un acte</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex gap-2 items-center">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-60" />
+                  <Input value={q} onChange={e=>setQ(e.target.value)} placeholder="fracture, rachis, brûlure, valve…" className="pl-9" />
+                </div>
+                <Button variant="outline" onClick={resetFilters}><RotateCcw className="w-4 h-4 mr-2"/>Réinitialiser</Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="secondary"><Filter className="w-4 h-4 mr-2"/>Catégories</Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-64">
+                    <DropdownMenuLabel>Afficher</DropdownMenuLabel>
+                    {CATEGORIES.map(cat => (
+                      <DropdownMenuCheckboxItem
+                        key={cat}
+                        checked={catFilter.includes(cat)}
+                        onCheckedChange={(v)=>{
+                          setCatFilter(prev => v ? [...prev, cat] : prev.filter(c=>c!==cat));
+                        }}
+                      >{cat}</DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
 
-        <div class="row" style="gap:16px">
-          <div style="flex:1 1 280px;min-width:260px">
-            <label for="specialty">Spécialité</label>
-            <select id="specialty">
-              <option value="ortho">Orthopédie — Réparation osseuse</option>
-              <option value="neuro_crane">Neuro — Chirurgie crânienne</option>
-              <option value="spine">Rachis — Colonne vertébrale</option>
-              <option value="thorax">Thorax — Chirurgie thoracique</option>
-              <option value="cardio">Cardiaque — Chirurgie cardiaque</option>
-              <option value="viscerale">Viscérale — Digestif</option>
-              <option value="burns">Brûlés — Grands brûlés</option>
-              <option value="neuro_trauma">Neuro — Traumatologie</option>
-            </select>
-          </div>
+              <div className="grid md:grid-cols-2 gap-3">
+                {filtered.map(item => (
+                  <Card key={item.id} className={cx("border", selected===item.id && "ring-2 ring-slate-900/10")}> 
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-semibold leading-tight">{item.titre}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      <div className="flex flex-wrap gap-1">
+                        <Badge variant="outline">{item.categorie}</Badge>
+                        {item.tags.slice(0,3).map(t => <Badge key={t} variant="secondary">{t}</Badge>)}
+                      </div>
+                      <div className="flex gap-2 pt-1">
+                        <Button size="sm" onClick={()=>handleCompose(item)}><ClipboardList className="w-4 h-4 mr-1"/>Composer rapport</Button>
+                        <Button size="sm" variant="outline" onClick={()=>setSelected(item.id)}><ListChecks className="w-4 h-4 mr-1"/>Voir détails</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
 
-          <div style="flex:1 1 320px;min-width:280px">
-            <label for="procedure">Procédure</label>
-            <select id="procedure"></select>
-          </div>
+              {selected && (
+                <Details item={bank.find(b=>b.id===selected)!} includeChecklist={includeChecklist} setIncludeChecklist={setIncludeChecklist} onCompose={handleCompose} />
+              )}
+            </CardContent>
+          </Card>
+        </section>
 
-          <div style="flex:1 1 100%">
-            <label for="context">Contexte / mécanisme (RP)</label>
-            <textarea id="context" rows="2" placeholder="Ex. chute haute énergie / GSW thorax G / polytraumatisé..."></textarea>
-          </div>
-        </div>
+        {/* Colonne droite: Rapport */}
+        <section className="space-y-4">
+          <Card className="shadow-sm sticky top-20">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5"/>
+                <CardTitle className="text-base">Rapport médical (générateur)</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Textarea
+                className="min-h-[380px] font-mono"
+                value={report}
+                onChange={(e)=>setReport(e.target.value)}
+                placeholder={"Cliquez sur \"Composer rapport\" depuis une fiche pour pré-remplir ici…"}
+              />
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={()=>{ navigator.clipboard.writeText(report||""); }}><Copy className="w-4 h-4 mr-2"/>Copier</Button>
+                <Button onClick={()=>downloadText("rapport_chirurgie_RP.txt", report||"")}><Download className="w-4 h-4 mr-2"/>Télécharger</Button>
+              </div>
+              <Separator/>
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Inclure des checklists</p>
+                {Object.keys(checklists).map((key)=> (
+                  <label key={key} className="flex items-center gap-2 text-sm">
+                    <Checkbox checked={includeChecklist[key]} onCheckedChange={(v)=>setIncludeChecklist(prev=>({...prev, [key]: !!v}))}/>
+                    <span>{key}</span>
+                  </label>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      </main>
 
-        <div class="row" style="gap:12px;margin-top:8px">
-          <span class="chip"><input type="checkbox" id="flag-gsw"/> Blessure par balle</span>
-          <span class="chip"><input type="checkbox" id="flag-unstable"/> Patient instable (choc suspect)</span>
-          <span class="chip"><input type="checkbox" id="flag-airway"/> Atteinte voie aérienne</span>
-        </div>
-
-        <div class="row" style="gap:10px;margin-top:14px">
-          <button class="btn" id="btn-generate">Générer</button>
-          <button class="btn secondary" id="btn-reset">Réinitialiser</button>
-        </div>
-      </section>
-
-      <!-- OUTPUT -->
-      <section class="card" aria-labelledby="out-title">
-        <div class="titlebar">
-          <div class="section-title" id="out-title">Plan & Rapport</div>
-          <div class="right">
-            <button class="btn" id="btn-copy">📋 Copier le rapport</button>
-          </div>
-        </div>
-
-        <div id="out-empty" class="block warn" style="display:none">
-          Renseignez le cas et cliquez <span class="kbd">Générer</span>.
-        </div>
-
-        <div class="results" id="results" style="display:none">
-          <div class="two">
-            <div class="block">
-              <div class="sub">Sur scène — Priorités</div>
-              <ul id="list-scene"></ul>
-            </div>
-            <div class="block">
-              <div class="sub">Examens à prévoir</div>
-              <ul id="list-exams"></ul>
-            </div>
-          </div>
-
-          <div class="thinline"></div>
-
-          <div class="block">
-            <div class="sub">Étapes opératoires (RP)</div>
-            <ul id="list-steps"></ul>
-          </div>
-
-          <div class="two">
-            <div class="block success">
-              <div class="sub">Post-op / Surveillance</div>
-              <ul id="list-postop"></ul>
-            </div>
-            <div class="block">
-              <div class="sub">Complications / Points de vigilance</div>
-              <ul id="list-comp"></ul>
-            </div>
-          </div>
-
-          <div class="block">
-            <div class="sub">Rapport (pré-rempli)</div>
-            <textarea id="report" rows="8"></textarea>
-          </div>
-        </div>
-      </section>
+      <footer className="max-w-7xl mx-auto px-4 pb-8 text-xs text-slate-500">
+        <Separator className="mb-3"/>
+        <p>
+          ⚠️ Outil de jeu — GTA RP. Pour simplifier les scènes et rapports. 
+          Procédures simplifiées et non prescriptives. Aucune information ici n'est un conseil médical réel.
+        </p>
+      </footer>
     </div>
+  );
+}
 
-    <footer>© <span id="year"></span> — RP Guide Opératoire. Heuristiques RP, ne remplace pas un avis réel.</footer>
-  </div>
+function Details({ item, includeChecklist, setIncludeChecklist, onCompose }){
+  return (
+    <Card className="shadow-sm">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">Détails — {item.titre}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Tabs defaultValue="examens" className="w-full">
+          <TabsList className="grid grid-cols-5">
+            <TabsTrigger value="examens">Examens</TabsTrigger>
+            <TabsTrigger value="gestes">Gestes</TabsTrigger>
+            <TabsTrigger value="bloc">Bloc</TabsTrigger>
+            <TabsTrigger value="postop">Post-op</TabsTrigger>
+            <TabsTrigger value="rapport">Rapport</TabsTrigger>
+          </TabsList>
+          <TabsContent value="examens">
+            <Bullets items={item.examens}/>
+          </TabsContent>
+          <TabsContent value="gestes">
+            <Bullets items={item.gestes}/>
+          </TabsContent>
+          <TabsContent value="bloc">
+            <Bullets items={item.bloc}/>
+          </TabsContent>
+          <TabsContent value="postop">
+            <Bullets items={item.postop}/>
+          </TabsContent>
+          <TabsContent value="rapport">
+            <div className="space-y-3">
+              <p className="text-sm">Points clés à documenter :</p>
+              <div className="flex flex-wrap gap-1">
+                {item.rapportPoints.map((p)=> (<Badge key={p} variant="secondary">{p}</Badge>))}
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={()=>onCompose(item)}><ClipboardList className="w-4 h-4 mr-2"/>Composer un rapport</Button>
+              </div>
+              <Separator/>
+              <p className="text-xs text-slate-500">Ajouts automatiques possibles :</p>
+              <div className="grid sm:grid-cols-3 gap-2">
+                {Object.keys(checklists).map(key => (
+                  <label key={key} className="flex items-center gap-2 text-sm">
+                    <Checkbox checked={includeChecklist[key]} onCheckedChange={(v)=>setIncludeChecklist(prev=>({...prev, [key]: !!v}))}/>
+                    <span>Inclure checklist {key}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+}
 
-  <script>
-    // ====== Données: synthèse depuis ton contenu (résumé RP) ======
-    const DB = {
-      ortho: {
-        label: "Orthopédie — Réparation osseuse",
-        procedures: {
-          broches: {
-            label: "Réparation avec broches/clous",
-            scene: [
-              "Immobilisation segmentaire, contrôle hémorragie",
-              "Antalgie, évaluer vasculo-nerveux distal (pouls, sensibilité, motricité)",
-            ],
-            exams: ["RX segment en 2 incidences", "± TDM si fracture complexe", "Bilan pré-op standard"],
-            steps: [
-              "Incision ciblée, réduction fermée/ouverte",
-              "Insertion clou intramédullaire / broches transfixiantes",
-              "Contrôle radioscopique des axes et de la longueur",
-              "Fixations distales/proximales si besoin, fermeture",
-            ],
-            postop: ["Contention/attelle", "Antalgie, glace, surélévation", "Surveillance NV distale"],
-            comp: ["Mal-alignement / retard de consolidation", "Infection, saignement", "Lésion vasculo-nerveuse"],
-          },
-          vis: {
-            label: "Ostéosynthèse par vis",
-            scene: ["Immobilisation stricte", "Antalgie, protection plaies"],
-            exams: ["RX ± TDM", "Bilan pré-op"],
-            steps: [
-              "Réduction, forage, taraudage si nécessaire",
-              "Mise en place de vis (compression perpendiculaire à la fracture)",
-              "Contrôle radioscopique et fermeture",
-            ],
-            postop: ["Repos, immobilisation adaptée", "Contrôle douleur & NV", "RX de contrôle"],
-            comp: ["Déplacement secondaire", "Matériel saillant / irritation", "Infection"],
-          },
-          plaques: {
-            label: "Plaques + vis",
-            scene: ["Immobilisation, évaluer peau/tissus mous"],
-            exams: ["RX 2 incidences", "TDM si intra-articulaire", "Bilan pré-op"],
-            steps: [
-              "Voie d’abord, réduction anatomique",
-              "Adaptation plaque, vissage séquentiel",
-              "Contrôle stabilité & mobilité articulaire",
-            ],
-            postop: ["Contention, glace, élévation", "Antibioprophylaxie RP selon contexte", "Rééducation selon site"],
-            comp: ["Risque infectieux", "Cal vicieux", "Intolérance matériel"],
-          },
-          pate: {
-            label: "Pâte / substituts osseux (comblement)",
-            scene: ["Immobilisation, hémostase"],
-            exams: ["RX/TDM pour défect osseux", "Bilan pré-op"],
-            steps: [
-              "Préparation site, débridement",
-              "Mise en place substitut (autologue/synthétique)",
-              "Association ostéosynthèse si nécessaire",
-            ],
-            postop: ["Repos, éviter appui", "Surveillance douleur/œdème", "Contrôle imagerie à distance"],
-            comp: ["Résorption insuffisante", "Infection", "Non-intégration"],
-          },
-        }
-      },
-
-      neuro_crane: {
-        label: "Neuro — Chirurgie crânienne",
-        procedures: {
-          craniotomie: {
-            label: "Craniotomie",
-            scene: ["ABCDE, GCS, prévention HTIC", "Si hématome suspect: évacuation rapide vers bloc (RP)"],
-            exams: ["CT cérébrale ± angio", "Bilan pré-op"],
-            steps: [
-              "Incision et volet osseux",
-              "Traitement lésionnel (drainage hématome / exérèse lésion)",
-              "Remise en place du volet (plaques/vis titane)",
-            ],
-            postop: ["Surveillance neuro (GCS, pupilles)", "CT de contrôle", "Prévention crises / ATB selon geste"],
-            comp: ["Hémorragie, infection", "Œdème/HTIC", "Crises convulsives"],
-          },
-          cranioplastie: {
-            label: "Crânioplastie",
-            scene: ["Protection zone défect, casque si besoin"],
-            exams: ["CT 3D pour implant", "Bilan infectieux"],
-            steps: [
-              "Préparation site, adaptation implant (autogreffe/titane/PMMA)",
-              "Fixation plaques/vis",
-            ],
-            postop: ["ATB prophylaxie RP", "Surveillance plaie et neuro"],
-            comp: ["Infection implant", "Décollement, hématome sous-galeal"],
-          },
-          plaques_vis: {
-            label: "Plaques/vis crâniennes",
-            scene: ["Protection, contrôle saignement", "GCS régulier"],
-            exams: ["CT osseux", "Bilan"],
-            steps: ["Réduction fragments", "Fixation mini-plaques/vis"],
-            postop: ["Surveillance neuro/plaie", "Analgesie"],
-            comp: ["Infection, déplacement matériel"],
-          },
-          ciment: {
-            label: "Ciment (PMMA / Hydroxyapatite)",
-            scene: ["Protection défaut osseux"],
-            exams: ["CT 3D", "Bilan"],
-            steps: ["Moulage et comblement", "Stabilisation"],
-            postop: ["Surveillance locale", "ATB si indiqué"],
-            comp: ["Rejet/inf", "Irrégularités"],
-          },
-        }
-      },
-
-      spine: {
-        label: "Rachis — Colonne",
-        procedures: {
-          discectomie: {
-            label: "Discectomie",
-            scene: ["Immobilisation rachidienne si trauma", "Antalgie, déficit neuro?"],
-            exams: ["IRM/CT selon niveau", "RX dynamique si dégénératif"],
-            steps: [
-              "Voie d’abord (post/ant selon niveau)",
-              "Ablation fragment discal compressif",
-              "± dispositif intersomatique",
-            ],
-            postop: ["Ceinture/colier selon niveau", "Rééducation", "Antalgie"],
-            comp: ["Récidive hernie", "Déficit neuro", "Infection"],
-          },
-          laminectomie: {
-            label: "Laminectomie (décompression)",
-            scene: ["Précautions rachis", "Eval neuro"],
-            exams: ["IRM/CT", "Bilan"],
-            steps: ["Ablation lames vertébrales", "Décompression canal/foramens"],
-            postop: ["Surveillance motrice/sensitive", "Antalgie"],
-            comp: ["Instabilité secondaire", "Infection"],
-          },
-          fusion: {
-            label: "Fusion vertébrale",
-            scene: ["Immobilisation rigoureuse", "Antalgie"],
-            exams: ["IRM/CT", "Planification vis/ponts"],
-            steps: ["Préparation plateau", "Greffon (auto/allo/substitut)", "Vis pédiculaires + tiges ± cage"],
-            postop: ["Corset/colier", "Rééducation", "RX/CT contrôle"],
-            comp: ["Pseudarthrose", "Malposition vis", "Infection"],
-          },
-          foraminotomie: {
-            label: "Foraminotomie",
-            scene: ["R/O déficit aigu", "Antalgie"],
-            exams: ["IRM", "Bilan"],
-            steps: ["Agrandissement foramen", "Libération racine"],
-            postop: ["Mobilisation prudente", "Antalgie"],
-            comp: ["Dure-mère, hémorragie", "Déficit persistant"],
-          },
-          scoliose: {
-            label: "Chirurgie scoliose",
-            scene: ["Bilan respi, neuro", "Planif niveau fusion"],
-            exams: ["RX corps entier EOS", "CT planif vis"],
-            steps: ["Vis pédiculaires longues", "Tiges, correction progressive", "Fusion multi-étage"],
-            postop: ["Surveillance respi", "Rééducation progressive"],
-            comp: ["Pseudarthrose", "Infection", "Déficit iatrogène"],
-          },
-          prothese: {
-            label: "Prothèse discale",
-            scene: ["Indication dégénérative sans instabilité"],
-            exams: ["IRM/CT mesure discale"],
-            steps: ["Abord antérieur", "Ablation disque", "Implant prothèse mobile"],
-            postop: ["Kinésithérapie", "Contrôle radio"],
-            comp: ["Mauvais positionnement", "Usure implant"],
-          },
-          vertebro: {
-            label: "Vertébro/Cyphoplastie",
-            scene: ["Fracture compression? douleur aiguë"],
-            exams: ["RX/CT ± IRM œdème", "Bilan coag"],
-            steps: ["(Cypho) ballon → restauration hauteur", "Injection ciment (PMMA)"],
-            postop: ["Surveillance fuite ciment", "Antalgie"],
-            comp: ["Fuite ciment", "Échec douleur"],
-          },
-        }
-      },
-
-      thorax: {
-        label: "Thorax — Chirurgie thoracique",
-        procedures: {
-          lobectomie:{label:"Lobectomie",scene:["ABC, O₂, douleur","GSW thorax: pansement occlusif 3 côtés (RP)"],
-            exams:["TDM thoracique ± PET","EFR si possible"],steps:["Abord VATS/thoracotomie","Section pédicules (bronche/vx)","Résection lobe, contrôle étanchéité"],
-            postop:["Drain thoracique","KT douleur, kiné respi"],comp:["Fuite aérienne prolongée","Infection, atélectasie"]},
-          pneumonectomie:{label:"Pneumonectomie",scene:["Stabiliser respiration, hémodynamique"],exams:["TDM, écho cardiaque"],steps:["Clampage vx/bronche","Résection poumon entier","Drainage adapté"],
-            postop:["USI, surveillance respi/hémodyn"],comp:["Œdème post-pneumonectomie","Insuffisance respi"]},
-          mediastino:{label:"Médiastinoscopie/médiastinotomie",scene:["Airway check"],exams:["TDM/IRM médiastin"],steps:["Biopsies/abord tumoral"],postop:["Surveillance saignement"],comp:["Lésion vasculaire/nerveuse"]},
-          oesophage:{label:"Œsophagectomie",scene:["Voies aériennes, nutrition anticipée"],exams:["TDM, endoscopie"],steps:["Résection, ascension gastrique","Anastomose"],postop:["Sonde nutrition","Contrôle fistule"],comp:["Fuite anastomotique","Pneumonie"]},
-          decortication:{label:"Décortication pleurale",scene:["Analgesie, O₂"],exams:["TDM pleural"],steps:["Ablation coque fibreuse","Libération pulmonaire"],postop:["Drain, kiné respi"],comp:["Hémorragie","Infection"]},
-          tracheo:{label:"Trachéotomie",scene:["Airway prioritaire"],exams:["—"],steps:["Ouverture trachée","Mise en place canule"],postop:["Soins canule, aspiration"],comp:["Hémorragie","Infection","Sténose"]},
-          trauma:{label:"Trauma thoracique",scene:["Occlusif 3 côtés, drain selon RP","Stabiliser côtes"],exams:["TDM trauma","RX lit"],steps:["Drain pleural","Fixation côtes si volet sévère"],postop:["Surveillance respi, douleur"],comp:["Hémothorax résiduel","Empyème"]},
-        }
-      },
-
-      cardio: {
-        label: "Cardiaque — Chirurgie",
-        procedures: {
-          cabg:{label:"Pontage coronarien",scene:["O₂, anti-ischémique RP si besoin"],exams:["Coronarographie","Echo"],steps:["Sternotomie","Prélèvement greffons","Pontages distaux"],postop:["USI, inotrope si besoin"],comp:["Saignement","FA post-op"]},
-          valve:{label:"Réparation/Remplacement valvulaire",scene:["Préparer anticoag/antibioprophylaxie RP"],exams:["Echo TTE/TEE"],steps:["Abord cardiaque","Réparation anneau/feuillets ou prothèse"],postop:["Anticoag selon prothèse","Echo de contrôle"],comp:["Dysfonction prothèse","Endocardite"]},
-          maze:{label:"FA — Maze/Ablation",scene:["Risque thrombo"],exams:["Echo, anticoag"],steps:["Lésions de conduction (cryo/RF)"],postop:["Rythme, anticoag"],comp:["Récidive FA"]},
-          transplant:{label:"Transplantation cardiaque",scene:["USI, support"],exams:["Bilan complet compatibilité"],steps:["Explant donneur, implant receveur"],postop:["Immunosuppresseurs"],comp:["Rejet, infection"]},
-          vad:{label:"Assistance ventriculaire (VAD)",scene:["Choc cardiogénique"],exams:["Echo, cathé"],steps:["Implant VAD (VG±VD)"],postop:["Réglages device, anticoag"],comp:["Thrombose","Infection device"]},
-        }
-      },
-
-      viscerale: {
-        label: "Viscérale — Digestif",
-        procedures: {
-          appendice:{label:"Appendicectomie",scene:["Antalgie, ATB si sepsis"],exams:["Echo/CT"],steps:["Voie ouverte/laparo","Section et fermeture moignon"],postop:["Régime, ATB si compliquée"],comp:["Abcès","Fistule rare"]},
-          chole:{label:"Cholécystectomie",scene:["Douleur, jeûne"],exams:["Echo biliaire ± bilan hépatique"],steps:["Laparoscopie 4 trocarts","Clip cystique/ART","Exérèse"],postop:["Surveillance douleur, alimentation progressive"],comp:["Lésion voie biliaire","Hémorragie"]},
-          hernie:{label:"Herniorraphie/Hernioplastie",scene:["Réduction douce si possible"],exams:["— (clinique) ± echo"],steps:["Réduction sac","Suture paroi ou filet"],postop:["Ceinture, repos"],comp:["Récidive","Sérome"]},
-          resection:{label:"Résection intestinale",scene:["Fluides, ATB"],exams:["CT abdo"],steps:["Résection segment","Anastomose ± stomie"],postop:["Transit, ATB selon"],comp:["Fuite anastomotique","Iléus"]},
-          gastrectomie:{label:"Gastrectomie (partielle/totale)",scene:["Préparer nutrition"],exams:["Endoscopie, CT"],steps:["Résection","Reconstruction (Billroth/Roux-en-Y)"],postop:["SNG, réalimentation"],comp:["Fuite, carences"]},
-          bariatrique:{label:"Bariatrique (Sleeve/Bypass)",scene:["Bilan nutritif"],exams:["Endoscopie"],steps:["Sleeve ou Bypass"],postop:["Supplémentation"],comp:["Fuites, carences"]},
-          hepatectomie:{label:"Hépatectomie",scene:["Bilan coag"],exams:["IRM/CT hépatique"],steps:["Résection segmentaire"],postop:["Surv. hémorragie, bilans"],comp:["Bile leak","Insuffisance hépatique"]},
-          pancreatectomie:{label:"Pancréatectomie",scene:["Douleur, enzymes"],exams:["CT/IRM"],steps:["Whipple / distale"],postop:["Surv. fistule, glycémie"],comp:["Fistule pancréatique"]},
-          tumeurs:{label:"Résection tumeurs abdominales",scene:["—"],exams:["CT/IRM","Marqueurs"],steps:["Exérèse ± curage"],postop:["Surv. saignement"],comp:["Fuite, hémorragie"]},
-          splenectomie:{label:"Splénectomie",scene:["Vaccins (RP) si possible"],exams:["Echo/CT"],steps:["Abord ouvert/laparo","Ligatures pédicule"],postop:["Vaccins si non faits","Risque infectieux"],comp:["Sepsis fulminans"]},
-        }
-      },
-
-      burns: {
-        label:"Brûlés — Grands brûlés",
-        procedures: {
-          grands_brules: {
-            label:"Prise en charge grands brûlés",
-            scene:[
-              "Stopper l’agent causal, refroidir 10–20 min (eau tempérée)",
-              "ABCDE, assurer voie aérienne (inhalation?)",
-              "Réanimation liquidienne (formule de Parkland RP)",
-              "Analgesie, couverture thermique"
-            ],
-            exams:["Évaluer %SCB (règle des 9)","Photos/traçage","Bilan biologique"],
-            steps:[
-              "Toilette/débridement",
-              "Pansements antimicrobiens",
-              "Greffes cutanées (auto/allo) si profondes ou étendues"
-            ],
-            postop:["Antalgie soutenue","Kiné/orthèses antidéformations","Suivi nutritionnel/psychologique"],
-            comp:["Infections","Cicatrices hypertrophiques/contractures","Troubles hydro-électrolytiques"]
-          }
-        }
-      },
-
-      neuro_trauma: {
-        label:"Neuro — Traumatologie",
-        procedures:{
-          tcc:{
-            label:"Traumatisme crânien (TCC)",
-            scene:["GCS, immobilisation cou","Airway/O₂, prévention HTIC","ATCD anticoagulants ?"],
-            exams:["CT cérébrale ± contrôle","Bilan coag"],
-            steps:["Craniotomie décompressive si HTIC/hématome","Surveillance rapprochée"],
-            postop:["Sevrage progressif", "Prévention crises", "Rééducation"],
-            comp:["Œdème/HTIC","Hydrocéphalie","Troubles cognitifs"]
-          },
-          moelle:{
-            label:"Lésion médullaire",
-            scene:["Immobilisation rachis stricte","Airway/respiration","Choc neurogénique ?"],
-            exams:["IRM rachidienne","CT osseuse"],
-            steps:["Décompression/fixation","Soins de nursing spécialisés"],
-            postop:["Rééducation longue","Prévention escarres","Gestion sphinctériens"],
-            comp:["Spasticité","Infections","Douleurs neuropathiques"]
-          },
-          nerfs:{
-            label:"Lésions nerfs périphériques",
-            scene:["Protection plaie, évaluer déficit sensitivo-moteur"],
-            exams:["EMG à distance (RP)","Echo nerveuse ± IRM"],
-            steps:["Suture/greffe nerveuse selon délai","Neurolyse si compression"],
-            postop:["Rééducation fine","Orthèses fonctionnelles"],
-            comp:["Douleurs neuro", "Déficit persistant"]
-          }
-        }
-      }
-    };
-
-    // ====== Éléments ======
-    const els = {
-      specialty: document.getElementById('specialty'),
-      procedure: document.getElementById('procedure'),
-      context: document.getElementById('context'),
-      flagGSW: document.getElementById('flag-gsw'),
-      flagUnstable: document.getElementById('flag-unstable'),
-      flagAirway: document.getElementById('flag-airway'),
-      btnGen: document.getElementById('btn-generate'),
-      btnReset: document.getElementById('btn-reset'),
-      btnCopy: document.getElementById('btn-copy'),
-      btnExport: document.getElementById('btn-export'),
-      btnPrint: document.getElementById('btn-print'),
-      btnStart: document.getElementById('btn-start'),
-      startPill: document.getElementById('start-pill'),
-      outEmpty: document.getElementById('out-empty'),
-      results: document.getElementById('results'),
-      listScene: document.getElementById('list-scene'),
-      listExams: document.getElementById('list-exams'),
-      listSteps: document.getElementById('list-steps'),
-      listPost: document.getElementById('list-postop'),
-      listComp: document.getElementById('list-comp'),
-      report: document.getElementById('report')
-    };
-
-    // ====== Heure de début ======
-    let startAt = null;
-    function fmt(dt){
-      return dt.toLocaleString(undefined,{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-    }
-    els.btnStart.addEventListener('click', ()=>{
-      startAt = new Date();
-      els.startPill.textContent = 'Début: ' + fmt(startAt);
-      const old = els.btnStart.textContent; els.btnStart.textContent='✅ Heure enregistrée';
-      setTimeout(()=> els.btnStart.textContent = old, 1200);
-    });
-
-    // ====== Init procédures selon spécialité ======
-    function populateProcedures(){
-      const spec = els.specialty.value;
-      const data = DB[spec].procedures;
-      els.procedure.innerHTML = '';
-      Object.keys(data).forEach(key=>{
-        const opt = document.createElement('option');
-        opt.value = key; opt.textContent = data[key].label;
-        els.procedure.appendChild(opt);
-      });
-    }
-    els.specialty.addEventListener('change', populateProcedures);
-    populateProcedures();
-
-    // ====== Helpers render ======
-    function ulFill(ul, items){ ul.innerHTML = (items||[]).map(x=>`<li>${x}</li>`).join(''); }
-
-    function applyModifiers(scene, exams, steps){
-      // Modifs RP selon flags
-      if (els.flagGSW.checked){
-        scene.unshift("GSW: contrôle hémorragie, pansement occlusif si thorax, évacuation rapide RP");
-        exams.unshift("TDM zone d'impact ± body-scan trauma");
-        steps.unshift("Débridement/exploration trajectoire (RP), hémostase, préparation pour chirurgie définitive");
-      }
-      if (els.flagUnstable.checked){
-        scene.unshift("Instabilité: prioriser MARCH/ABCDE, voies veineuses, remplissage prudent, réchauffement");
-        exams.unshift("Bilans urgents (GDS, Hb, lactates), écho FAST");
-      }
-      if (els.flagAirway.checked){
-        scene.unshift("Airway critique: sécuriser (intubation/trachéotomie selon), O₂ haut débit");
-        steps.unshift("Contrôle voie aérienne au bloc avant tout geste");
-      }
-    }
-
-    // ====== Génération plan/report ======
-    function generate(){
-      const spec = els.specialty.value;
-      const proc = els.procedure.value;
-      const obj = DB[spec].procedures[proc];
-
-      // Clone arrays to avoid mutating DB
-      const scene = [...(obj.scene||[])];
-      const exams = [...(obj.exams||[])];
-      const steps = [...(obj.steps||[])];
-      const postop = [...(obj.postop||[])];
-      const comp = [...(obj.comp||[])];
-
-      applyModifiers(scene, exams, steps);
-
-      ulFill(els.listScene, scene);
-      ulFill(els.listExams, exams);
-      ulFill(els.listSteps, steps);
-      ulFill(els.listPost, postop);
-      ulFill(els.listComp, comp);
-
-      // Rapport
-      const startLine = startAt ? `Début intervention: ${fmt(startAt)}\n` : '';
-      const flags = [
-        els.flagGSW.checked ? "GSW" : null,
-        els.flagUnstable.checked ? "instable" : null,
-        els.flagAirway.checked ? "atteinte voie aérienne" : null
-      ].filter(Boolean).join(", ");
-
-      const report =
-`${startLine}Spécialité: ${DB[spec].label}
-Procédure: ${obj.label}
-Contexte: ${els.context.value || '—'}
-Drapeaux: ${flags || '—'}
-
-Sur scène:
- - ${scene.join('\n - ')}
-
-Examens:
- - ${exams.join('\n - ')}
-
-Geste opératoire:
- - ${steps.join('\n - ')}
-
-Post-op:
- - ${postop.join('\n - ')}
-
-Complications surveillées:
- - ${comp.join('\n - ')}
-
-Compte-rendu synthèse:
-Patient pris en charge pour ${obj.label.toLowerCase()}. Gestes réalisés selon protocole RP, surveillance post-op assurée.`;
-
-      els.report.value = report;
-
-      els.outEmpty.style.display = 'none';
-      els.results.style.display = 'grid';
-    }
-
-    // ====== Actions ======
-    els.btnGen.addEventListener('click', generate);
-    els.btnReset.addEventListener('click', ()=>{
-      els.context.value = '';
-      els.flagGSW.checked = false;
-      els.flagUnstable.checked = false;
-      els.flagAirway.checked = false;
-      els.results.style.display='none';
-      els.outEmpty.style.display='block';
-      startAt=null; els.startPill.textContent='Début: —';
-    });
-
-    els.btnCopy.addEventListener('click', ()=>{
-      const txt = els.report.value || '';
-      navigator.clipboard.writeText(txt).then(()=>{
-        const old = els.btnCopy.textContent; els.btnCopy.textContent = '✔ Rapport copié';
-        setTimeout(()=> els.btnCopy.textContent = old, 1200);
-      });
-    });
-
-    els.btnExport.addEventListener('click', ()=>{
-      const payload = {
-        startAt: startAt ? startAt.toISOString() : null,
-        specialty: els.specialty.value,
-        procedure: els.procedure.value,
-        context: els.context.value,
-        flags: { gsw: els.flagGSW.checked, unstable: els.flagUnstable.checked, airway: els.flagAirway.checked },
-        report: els.report.value
-      };
-      const blob = new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href=url; a.download=`rp_chirurgie_${Date.now()}.json`;
-      document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-    });
-
-    els.btnPrint.addEventListener('click', ()=> window.print());
-
-    // ====== Init ======
-    document.getElementById('year').textContent = new Date().getFullYear();
-    // Affiche un bloc d'aide tant que rien n’est généré
-    els.outEmpty.style.display='block';
-  </script>
-</body>
-</html>
+function Bullets({ items }){
+  return (
+    <ul className="list-disc pl-5 space-y-1 text-sm">
+      {items.map((x, i)=> <li key={i}>{x}</li>)}
+    </ul>
+  );
+}
