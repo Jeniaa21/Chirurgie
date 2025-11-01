@@ -5,46 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Chirurgie Complexe — GTA RP</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = { darkMode: 'class' };
-  </script>
+  <script> tailwind.config = { darkMode: 'class' };</script>
   <style>
-    :root {
-      --bg: #f8fafc;
-      --panel: #ffffff;
-      --border: #e2e8f0;
-      --text: #0f172a;
-      --muted: #64748b;
-      --chip: #f1f5f9;
-      --shadow: 0 8px 24px rgba(2, 6, 23, .06);
-      --ring: rgba(15, 23, 42, .12);
-      --accent: #0f172a;
-    }
-    .dark {
-      --bg: #0b1220;
-      --panel: #0f172a;
-      --border: #1f2937;
-      --text: #e5e7eb;
-      --muted: #94a3b8;
-      --chip: #111827;
-      --shadow: 0 8px 24px rgba(0, 0, 0, .35);
-      --ring: rgba(148, 163, 184, .2);
-      --accent: #38bdf8;
-    }
-    body { background: var(--bg); color: var(--text); }
-    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 1rem; box-shadow: var(--shadow); }
-    .btn { display: inline-flex; align-items: center; gap: .5rem; padding: .5rem .75rem; border-radius: .75rem; border: 1px solid var(--border); font-weight: 600; font-size: .9rem; }
-    .btn:hover { box-shadow: 0 0 0 6px var(--ring); }
-    .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
-    .btn-ghost { background: var(--panel); color: var(--text); }
-    .badge { display: inline-flex; align-items: center; padding: .15rem .5rem; border-radius: 9999px; font-size: .75rem; border: 1px solid var(--border); background: var(--chip); color: var(--muted); }
-    .tabs button { padding: .4rem .75rem; border-radius: .6rem; font-weight: 600; font-size: .9rem; color: var(--muted); }
-    .tabs button.active { background: var(--accent); color: white; }
-    .list-dash li { position: relative; padding-left: 1rem; }
-    .list-dash li::before { content: "•"; position: absolute; left: 0; color: var(--accent); }
-    .sticky-col { position: sticky; top: 6rem; }
-    .field { border: 1px solid var(--border); background: var(--panel); color: var(--text); border-radius: .75rem; padding: .6rem .75rem; }
-    .menu { border: 1px solid var(--border); background: var(--panel); border-radius: .75rem; box-shadow: var(--shadow); }
+    :root { --bg:#f8fafc; --panel:#ffffff; --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --chip:#f1f5f9; --shadow:0 8px 24px rgba(2,6,23,.06); --ring:rgba(15,23,42,.12); --accent:#0f172a; }
+    .dark { --bg:#0b1220; --panel:#0f172a; --border:#1f2937; --text:#e5e7eb; --muted:#94a3b8; --chip:#111827; --shadow:0 8px 24px rgba(0,0,0,.35); --ring:rgba(148,163,184,.2); --accent:#38bdf8; }
+    body { background:var(--bg); color:var(--text); }
+    .card{ background:var(--panel); border:1px solid var(--border); border-radius:1rem; box-shadow:var(--shadow); }
+    .btn{ display:inline-flex; align-items:center; gap:.5rem; padding:.5rem .75rem; border-radius:.75rem; border:1px solid var(--border); font-weight:600; font-size:.9rem; }
+    .btn:hover{ box-shadow:0 0 0 6px var(--ring); }
+    .btn-primary{ background:var(--accent); color:white; border-color:var(--accent); }
+    .btn-ghost{ background:var(--panel); color:var(--text); }
+    .badge{ display:inline-flex; align-items:center; padding:.15rem .5rem; border-radius:9999px; font-size:.75rem; border:1px solid var(--border); background:var(--chip); color:var(--muted); }
+    .tabs button{ padding:.4rem .75rem; border-radius:.6rem; font-weight:600; font-size:.9rem; color:var(--muted); }
+    .tabs button.active{ background:var(--accent); color:white; }
+    .list-dash li{ position:relative; padding-left:1rem; }
+    .list-dash li::before{ content:"•"; position:absolute; left:0; color:var(--accent); }
+    .sticky-col{ position:sticky; top:6rem; }
+    .field{ border:1px solid var(--border); background:var(--panel); color:var(--text); border-radius:.75rem; padding:.6rem .75rem; }
+    .menu{ border:1px solid var(--border); background:var(--panel); border-radius:.75rem; box-shadow:var(--shadow); }
+    .hint{ color:var(--muted); }
   </style>
 </head>
 <body>
@@ -82,69 +61,122 @@
           <span>📝</span>
           <h2 class="text-base font-semibold">Rapport médical (générateur)</h2>
         </div>
-        <textarea id="report" class="w-full min-h-[380px] field font-mono" placeholder="Clique sur 'Composer rapport' depuis une fiche pour pré-remplir ici…"></textarea>
+        <textarea id="report" class="w-full min-h-[380px] field font-mono" placeholder="Clique sur 'Composer' puis choisis le type d'intervention…"></textarea>
         <div class="flex gap-2 justify-end mt-2">
           <button id="btnCopy" class="btn btn-ghost">📋 Copier</button>
           <button id="btnDownload" class="btn btn-primary">⬇️ Télécharger</button>
         </div>
         <hr class="my-3" style="border-color:var(--border)" />
-        <p class="text-sm" style="color:var(--muted)">
-          Le rapport généré contient uniquement : <b>BLOC/OPÉRATION</b> et <b>POST-OP / SURVEILLANCE</b>.
+        <p class="text-sm hint">
+          Le rapport contient uniquement : <b>BLOC/OPÉRATION</b> et <b>POST-OP / SURVEILLANCE</b>. Sélectionne un <b>type d'intervention</b> dans la fiche pour un rapport plus précis.
         </p>
       </div>
     </aside>
   </main>
 
-  <footer class="max-w-7xl mx-auto px-4 pb-8 text-xs" style="color:var(--muted)">
+  <footer class="max-w-7xl mx-auto px-4 pb-8 text-xs hint">
     <hr class="mb-3" style="border-color:var(--border)" />
     ⚠️ Outil de jeu — GTA RP. Procédures simplifiées et non prescriptives. Ce contenu ne constitue pas un conseil médical réel.
   </footer>
 
   <script>
-  const root = document.documentElement;
-  const THEME_KEY = 'gta_rp_theme';
-  function setTheme(mode){
-    if(mode==='dark'){ root.classList.add('dark'); localStorage.setItem(THEME_KEY,'dark'); }
-    else { root.classList.remove('dark'); localStorage.setItem(THEME_KEY,'light'); }
-  }
-  (function(){
-    const saved = localStorage.getItem(THEME_KEY);
-    if(saved) setTheme(saved);
-    else if(window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme('dark');
-  })();
-  document.getElementById('themeToggle').addEventListener('click', ()=>setTheme(root.classList.contains('dark')?'light':'dark'));
+  // Thème
+  const root = document.documentElement; const THEME_KEY='gta_rp_theme';
+  function setTheme(m){ if(m==='dark'){ root.classList.add('dark'); localStorage.setItem(THEME_KEY,'dark'); } else { root.classList.remove('dark'); localStorage.setItem(THEME_KEY,'light'); } }
+  (function(){ const saved = localStorage.getItem(THEME_KEY); if(saved) setTheme(saved); else if(window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme('dark'); })();
+  document.getElementById('themeToggle').onclick=()=>setTheme(root.classList.contains('dark')?'light':'dark');
   window.addEventListener('keydown', e=>{ if(e.key.toLowerCase()==='t') document.getElementById('themeToggle').click(); });
 
-  const CATEGORIES = [
-    "Orthopédie/Os","Crâne/Neurochir","Rachis","Muscles/Tendons","Thorax","Cardiaque","Viscéral/Abdomen","Grands brûlés","Neurologie traumatique"
-  ];
-
+  // Données
   const bank = [
-    { id:'os-fix', titre:'Réparation osseuse (broches/vis/plaques/pâte)', categorie:'Orthopédie/Os', bloc:["Broches/clous IM: réalignement + verrouillage","Plaques + vis anatomiques si fracture articulaire/complexe","Pâte/greffe osseuse si perte de substance"], postop:["Contrôle vasculo-nerveux post-immobilisation","Imagerie de contrôle","Décharge/béquilles selon segment"] },
-    { id:'crane', titre:'Chirurgie crânienne (craniotomie / crânioplastie)', categorie:'Crâne/Neurochir', bloc:["Craniotomie: volet + évacuation hématome","Plaques/vis titane pour refixation","Crânioplastie ou ciment (PMMA/hydroxyapatite) si défaut"], postop:["Surveillance neuro rapprochée","Scan de contrôle","Prévention infection"] },
-    { id:'rachis', titre:'Rachis (discectomie, laminectomie, fusion, foraminotomie)', categorie:'Rachis', bloc:["Discectomie si conflit disque-nerf","Laminectomie pour décompression","Fusion + vis/tiges, cage si instabilité"], postop:["Surveillance neuro","Mobilisation encadrée","Imagerie de contrôle"] },
-    { id:'muscle', titre:'Rupture musculaire (partielle/complète)', categorie:'Muscles/Tendons', bloc:["Suture des berges musculaires","Renfort tendineux si besoin"], postop:["Immobilisation initiale","Mobilisation douce","Renforcement progressif"] },
-    { id:'thorax', titre:'Chirurgie thoracique (lobe, médiastin, trachée, trauma)', categorie:'Thorax', bloc:["Lobectomie/segmentectomie selon lésion","Décortication pleurale","Trachéotomie si voie aérienne compromise"], postop:["Surveillance respi + drains","Kiné respi","Contrôle fuites d'air"] },
-    { id:'cardiaque', titre:'Cardiaque (pontage, valves, FA, DAV)', categorie:'Cardiaque', bloc:["Pontage coronarien","Réparation/remplacement valvulaire","Ablation/MAZE","Implant DAV"], postop:["Surveillance en USIC/REA","Prévention infection","Rééducation cardiaque"] },
-    { id:'visc', titre:'Viscéral/Abdomen (appendice, vésicule, hernie, résection…)', categorie:'Viscéral/Abdomen', bloc:["Appendicectomie (souvent coelio)","Cholécystectomie coelio","Herniorraphie/mesh","Résection intestinale ± stomie","Gastrectomie / sleeve","Hépatectomie partielle","Pancréatectomie","Splénectomie"], postop:["Surveillance souillures/saignement","Reprise du transit","Douleur"] },
-    { id:'brules', titre:'Grands brûlés', categorie:'Grands brûlés', bloc:["Débridement","Greffes cutanées","Pansements spécifiques"], postop:["Kiné + orthèses","Suivi psycho","Gestion cicatrices"] },
-    { id:'neurotrauma', titre:'Neurologie traumatique (TCC, moelle, nerfs périph.)', categorie:'Neurologie traumatique', bloc:["Craniotomie décompressive","Fixation rachidienne","Réparation nerveuse"], postop:["Rééducation pluridisciplinaire","Prévention escarres/TVP","Suivi long cours"] }
+    {
+      id:'visc', categorie:'Viscéral/Abdomen', titre:'Viscéral/Abdomen (appendice, vésicule, hernie, résection…)',
+      bloc:["Appendicectomie (souvent coelio)","Cholécystectomie coelio","Herniorraphie/mesh","Résection intestinale ± stomie","Gastrectomie / sleeve","Hépatectomie partielle","Pancréatectomie","Splénectomie"],
+      postop:["Surveillance souillures/saignement","Reprise du transit","Douleur"],
+      procedures:[
+        {id:'appendicectomie', label:'Appendicectomie', bloc:["Voie: coelioscopie","Ligature/section appendice (endoloop/agrafe)","Lavage si péritonite","Extraction endobag"], postop:["Douleur/fièvre","Reprise du transit","Régime progressif"]},
+        {id:'cholecystectomie', label:'Cholécystectomie', bloc:["Coelioscopie","Dissection triangle de Calot","Clipage canal cystique + artère cystique","Extraction vésicule"], postop:["Surveillance douleur/ictère","Tolérance alimentaire","Contrôle des drains si posés"]},
+        {id:'hernie', label:'Herniorraphie/Hernioplastie', bloc:["Réintégration sac herniaire","Fermeture orifice","Pose prothèse (mesh) pré/retro-péritonéale"], postop:["Douleur locale","Surveillance hématome","Repos/éviter port de charges"]},
+        {id:'resection', label:'Résection intestinale', bloc:["Résection segmentaire","Anastomose termino-terminale (ou latéro-latérale)","Stomie de dérivation si besoin"], postop:["Transit, gaz/selles","Débit drains","Fièvre/abdomen sensible"]},
+        {id:'gastrectomie', label:'Gastrectomie', bloc:["Partielle ou totale selon lésion","Curage ganglionnaire si oncologique","Reconstruction: Billroth II ou Roux-en-Y"], postop:["SNG éventuelle","Surveillance fistule (tachy, fièvre, drainage)","Reprise PO progressive","Prévention carences (B12 si totale)"]},
+        {id:'bariatrique', label:'Chirurgie bariatrique (sleeve/bypass)', bloc:["Calibration bougie","Agrafage longitudinal (sleeve)","Test d'étanchéité","Bypass: petite poche + anse aliment + anse bilio-pancréatique"], postop:["Fuites/hémorragie","Hydratation fractionnée","Suivi diététique"]},
+        {id:'hepatectomie', label:'Hépatectomie', bloc:["Résection segmentaire/lobectomie","Contrôle pédiculaire (clampage/pringle)","Hémostase/colle + drainage"], postop:["HB/INR/bilirubine","Débit drains","Signes hémorragiques"]},
+        {id:'pancreatectomie', label:'Pancréatectomie (Whipple/distale)', bloc:["Whipple: céphalique avec anastomoses","Distale ± splénectomie","Hémostase méticuleuse"], postop:["Fistule pancréatique (amylase drain)","Glycémie","Douleur/NA"]},
+        {id:'splenectomie', label:'Splénectomie', bloc:["Ligature pédicule splénique","Extraction","Préservation/section des courts vaisseaux"], postop:["Surveillance saignement","Vaccinations (info RP)","Douleur"]}
+      ]
+    },
+    {
+      id:'thorax', categorie:'Thorax', titre:'Chirurgie thoracique (lobe, médiastin, trachée, trauma)',
+      bloc:["Lobectomie/segmentectomie","Décortication pleurale","Trachéotomie"],
+      postop:["Surveillance respi + drains","Kiné respi","Fuites d'air"],
+      procedures:[
+        {id:'lobectomie', label:'Lobectomie', bloc:["VATS/Thoracotomie","Section artère/veine/bronche du lobe","Retrait lobe + contrôle hémostase"], postop:["SpO2, douleur","Débit et bullage drains","Kinésithérapie"]},
+        {id:'pneumonectomie', label:'Pneumonectomie', bloc:["Ligature vaisseaux pulmonaires","Section bronche principale","Fermeture moignon"], postop:["Surveillance déviation médiastin","Balance hydrique stricte","Douleur"]},
+        {id:'decortication', label:'Décortication pleurale', bloc:["Ouverture thorax","Ablation coque fibreuse","Ré-expansion pulmonaire"], postop:["Débit drain","Fièvre/infection","SpO2"]},
+        {id:'tracheotomie', label:'Trachéotomie', bloc:["Incision trachéale","Mise en place canule","Fixation"], postop:["Soins canule","Aspirations","Surveillance saignement"]},
+        {id:'oesophagectomie', label:"Œsophagectomie", bloc:["Voies abdomino-thoraciques","Résection œsophage","Ascension estomac + anastomose"], postop:["Fistule anastomotique","Nutrition entérale","KTJ si nécessaire"]}
+      ]
+    },
+    {
+      id:'os-fix', categorie:'Orthopédie/Os', titre:'Réparation osseuse (broches/vis/plaques/pâte)',
+      bloc:["Broches/clous IM","Plaques + vis","Pâte/greffe osseuse"],
+      postop:["Contrôle vasculo-nerveux","Imagerie","Décharge/béquilles"],
+      procedures:[
+        {id:'broches', label:'Broches / clous IM', bloc:["Incision + entrée canal médullaire","Réduction fracture","Insertion clou + verrouillage prox/ dist"], postop:["Contrôle V/N distal","Radio de contrôle","Appui selon indication"]},
+        {id:'vis', label:'Vis', bloc:["Forage/mesure","Pose vis perpendiculaire au trait","Contrôle stabilité"], postop:["Douleur/œdème","Radio","Protection segment"]},
+        {id:'plaques', label:'Plaques', bloc:["Exposition fracture","Plaque anatomique + vis verrouillées","Contrôle alignement"], postop:["Radio","Mobilisation encadrée","Surveillance cicatrice"]},
+        {id:'pate', label:'Pâte/greffe osseuse', bloc:["Préparation site","Comblement défaut osseux","Stabilisation associée"], postop:["Consolidation radiologique","Appui progressif","Douleur"]}
+      ]
+    },
+    {
+      id:'crane', categorie:'Crâne/Neurochir', titre:'Chirurgie crânienne (craniotomie / crânioplastie)',
+      bloc:["Craniotomie","Plaques/vis titane","Crânioplastie/ciment"], postop:["Surveillance neuro","Scan de contrôle","Prévention infection"],
+      procedures:[
+        {id:'craniotomie', label:'Craniotomie', bloc:["Volet osseux","Évacuation hématome/lésion","Refixation volet (plaques/vis)"], postop:["GCS/pupilles","TDM de contrôle","Antibioprophylaxie selon protocole (RP)"]},
+        {id:'cranioplastie', label:'Crânioplastie', bloc:["Préparation défaut osseux","Implant (autogreffe/titane/PMMA)","Fixation"], postop:["Infection/collection","Esthétique/relief","Scan si besoin"]}
+      ]
+    },
+    {
+      id:'rachis', categorie:'Rachis', titre:'Rachis (discectomie, laminectomie, fusion, foraminotomie)',
+      bloc:["Discectomie","Laminectomie","Fusion"], postop:["Surveillance neuro","Mobilisation","Contrôle imagerie"],
+      procedures:[
+        {id:'discectomie', label:'Discectomie', bloc:["Voie postérieure/antérieure","Ablation fragment discal","Décompression racine"], postop:["Douleur radiculaire","Mobilisation prudente","Soin cicatrice"]},
+        {id:'laminectomie', label:'Laminectomie', bloc:["Résection lame vertébrale","Décompression canal","Hémostase"], postop:["Déficit moteur/sensoriel","Douleur","Mobilisation"]},
+        {id:'fusion', label:'Fusion vertébrale', bloc:["Préparation intersomatique","Greffon/cage","Vis/tiges"], postop:["Corset si indiqué","Restriction mouvements","Consolidation radio"]},
+        {id:'foraminotomie', label:'Foraminotomie', bloc:["Agrandissement foramen","Ablation ostéophytes","Libération racine"], postop:["Douleur/paresthésies","Mobilisation","Soin cicatrice"]}
+      ]
+    },
+    { id:'muscle', categorie:'Muscles/Tendons', titre:'Rupture musculaire (partielle/complète)', bloc:["Suture des berges","Renfort tendineux"], postop:["Immobilisation","Mobilisation douce","Renforcement"] },
+    { id:'cardiaque', categorie:'Cardiaque', titre:'Cardiaque (pontage, valves, FA, DAV)', bloc:["Pontage","Valve","Ablation/MAZE","DAV"], postop:["REA/USIC","Infection","Rééducation"],
+      procedures:[
+        {id:'pontage', label:'Pontage coronarien', bloc:["Sternotomie","Greffe mammaire/saphène","Dérivation des sténoses"], postop:["Douleur sternale","Drainages","Reprise marche"]},
+        {id:'valve', label:'Remplacement/Réparation valvulaire', bloc:["Exposition valve","Réparation ou prothèse","Test de fuite"], postop:["Anticoagulation (info RP)","Écho de contrôle","Infection"]},
+        {id:'maze', label:'FA — Maze/Ablation', bloc:["Lésions de blocage oreillettes","± Clip oreillette gauche","Contrôle rythme"], postop:["Rythme/ECG","Anticoag selon protocole","Douleur"]},
+        {id:'dav', label:"Dispositif d'assistance ventriculaire", bloc:["Implantation pompe","Connexion apex/aorte","Réglages"], postop:["Anticoagulation","Soins driveline","Éducation patient"]}
+      ]
+    },
+    { id:'brules', categorie:'Grands brûlés', titre:'Grands brûlés', bloc:["Débridement","Greffes cutanées","Pansements"], postop:["Kiné/orthèses","Suivi psycho","Cicatrices"] },
+    { id:'neurotrauma', categorie:'Neurologie traumatique', titre:'Neurologie traumatique (TCC, moelle, nerfs périph.)', bloc:["Craniotomie décompressive","Fixation rachidienne","Réparation nerveuse"], postop:["Rééducation","Prévention escarres/TVP","Suivi long cours"] }
   ];
 
-  const $ = sel => document.querySelector(sel);
+  const $ = (s)=>document.querySelector(s);
   function blobDownload(filename, text){ const blob = new Blob([text], {type:'text/plain'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href); }
 
-  function makeReport(item){
-    return `BLOC/OPÉRATION:\n- ${item.bloc.join('\n- ')}\n\nPOST-OP / SURVEILLANCE:\n- ${item.postop.join('\n- ')}`;
+  function makeReport(item, selectedProcId){
+    const proc = (item.procedures||[]).find(p=>p.id===selectedProcId);
+    const bloc = proc? proc.bloc : item.bloc;
+    const postop = proc? proc.postop : item.postop;
+    const titleLine = proc? `Type d'intervention : ${proc.label}\n\n` : '';
+    return `${titleLine}BLOC/OPÉRATION:\n- ${bloc.join('\n- ')}\n\nPOST-OP / SURVEILLANCE:\n- ${postop.join('\n- ')}`;
   }
 
-  const state = { q:'', selectedId:null };
-  function filterData(){ const q=state.q.trim().toLowerCase(); return bank.filter(it=>!q || it.titre.toLowerCase().includes(q)); }
+  const state = { q:'', selectedId:null, selectedProc:{} };
+  function filterData(){ const q=state.q.trim().toLowerCase(); return bank.filter(it=>!q || it.titre.toLowerCase().includes(q) || it.categorie.toLowerCase().includes(q)); }
 
   function renderResults(){
     const list=$('#results'); list.innerHTML='';
     const data=filterData();
-    if(!data.length){ list.innerHTML='<div class=\"card p-6 text-center\">Aucun résultat trouvé</div>'; return; }
+    if(!data.length){ list.innerHTML='<div class="card p-6 text-center">Aucun résultat trouvé</div>'; return; }
     data.forEach(item=>{
       const card=document.createElement('div'); card.className='card p-3';
       card.innerHTML=`<div class='text-sm font-semibold'>${item.titre}</div><div class='flex flex-wrap gap-1 mt-1'><span class='badge'>${item.categorie}</span></div><div class='flex gap-2 pt-3'><button class='btn btn-primary'>🧾 Composer</button><button class='btn btn-ghost'>📋 Voir</button></div>`;
@@ -155,31 +187,77 @@
   }
 
   function showDetails(item){
+    state.selectedId=item.id;
     const wrap=$('#detailsWrap'); wrap.innerHTML='';
     const card=document.createElement('div'); card.className='card p-4';
-    card.innerHTML=`<h3 class='text-base font-semibold mb-2'>${item.titre}</h3><div class='tabs flex flex-wrap gap-2'><button data-tab='bloc' class='active'>🛠️ Bloc</button><button data-tab='postop'>💊 Post-op</button></div><div id='tabContent' class='mt-3'></div>`;
+    card.innerHTML=`
+      <div class='flex items-center justify-between gap-2'>
+        <h3 class='text-base font-semibold'>${item.titre}</h3>
+        <button class='btn btn-primary' id='btnCompose2'>🧾 Composer</button>
+      </div>
+      ${(item.procedures&&item.procedures.length)?`<div class='mt-3'>
+        <div class='text-sm font-semibold mb-1'>Type d'intervention</div>
+        <div id='procList' class='grid sm:grid-cols-2 gap-2'></div>
+        <div class='flex gap-2 mt-2'>
+          <button class='btn btn-ghost' id='btnClearProc'>Effacer la sélection</button>
+          <span class='hint text-sm'>Ex.: Viscéral/Abdomen → coche <b>Gastrectomie</b> pour un rapport ciblé.</span>
+        </div>
+      </div>`:''}
+      <div class='tabs mt-4 flex flex-wrap gap-2'>
+        <button data-tab='bloc' class='active'>🛠️ Bloc</button>
+        <button data-tab='postop'>💊 Post-op</button>
+      </div>
+      <div id='tabContent' class='mt-3'></div>
+    `;
+
+    // Procedures UI
+    if(item.procedures && item.procedures.length){
+      const box = card.querySelector('#procList');
+      const current = state.selectedProc[item.id] || null;
+      item.procedures.forEach(p=>{
+        const id=`proc-${item.id}-${p.id}`;
+        const row=document.createElement('label'); row.className='flex items-center gap-2 p-2 rounded border'; row.style.borderColor='var(--border)';
+        row.innerHTML=`<input type='radio' name='proc-${item.id}' id='${id}' ${current===p.id? 'checked':''}/> <span class='text-sm'>${p.label}</span>`;
+        row.querySelector('input').addEventListener('change',()=>{ state.selectedProc[item.id]=p.id; renderTab(currentTab()); });
+        box.appendChild(row);
+      });
+      card.querySelector('#btnClearProc').onclick=()=>{ delete state.selectedProc[item.id]; renderTab(currentTab()); box.querySelectorAll('input').forEach(i=>i.checked=false); };
+    }
+
+    card.querySelector('#btnCompose2').onclick=()=>composeReport(item);
+
     const tabs=card.querySelectorAll('[data-tab]');
-    tabs.forEach(btn=>btn.onclick=()=>{tabs.forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderTab(btn.dataset.tab);});
-    function bullets(arr){return `<ul class='list-dash space-y-1 text-sm'>${arr.map(x=>`<li>${x}</li>`).join('')}</ul>`;}
-    function renderTab(name){const c=card.querySelector('#tabContent'); if(name==='bloc') c.innerHTML=bullets(item.bloc); else c.innerHTML=bullets(item.postop);}
-    renderTab('bloc'); wrap.appendChild(card);
+    tabs.forEach(btn=>btn.onclick=()=>{ tabs.forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderTab(btn.dataset.tab); });
+    function currentTab(){ const a=[...tabs].find(b=>b.classList.contains('active')); return a?a.dataset.tab:'bloc'; }
+    function bullets(arr){ return `<ul class='list-dash space-y-1 text-sm'>${arr.map(x=>`<li>${x}</li>`).join('')}</ul>`; }
+    function renderTab(name){
+      const c=card.querySelector('#tabContent');
+      const procId=state.selectedProc[item.id];
+      const proc=(item.procedures||[]).find(p=>p.id===procId);
+      const bloc = proc? proc.bloc : item.bloc;
+      const postop = proc? proc.postop : item.postop;
+      c.innerHTML = name==='bloc' ? bullets(bloc) : bullets(postop);
+    }
+    renderTab('bloc');
+    wrap.appendChild(card);
+    window.scrollTo({ top: card.offsetTop - 80, behavior: 'smooth' });
   }
 
   function composeReport(item){
-    const text=makeReport(item);
-    $('#report').value=text;
-    localStorage.setItem('gta_rp_chir_report',text);
+    const text = makeReport(item, state.selectedProc[item.id]);
+    document.getElementById('report').value = text;
+    localStorage.setItem('gta_rp_chir_report', text);
   }
 
-  $('#q').oninput=e=>{state.q=e.target.value;renderResults();};
-  $('#btnReset').onclick=()=>{$('#q').value='';state.q='';renderResults();};
-  $('#btnCopy').onclick=()=>navigator.clipboard.writeText($('#report').value||'');
-  $('#btnDownload').onclick=()=>blobDownload('rapport_chirurgie_RP.txt',$('#report').value||'');
+  // Events
+  document.getElementById('q').oninput = e=>{ state.q=e.target.value; renderResults(); };
+  document.getElementById('btnReset').onclick = ()=>{ document.getElementById('q').value=''; state.q=''; renderResults(); };
+  document.getElementById('btnCopy').onclick = ()=> navigator.clipboard.writeText(document.getElementById('report').value||'');
+  document.getElementById('btnDownload').onclick = ()=> blobDownload('rapport_chirurgie_RP.txt', document.getElementById('report').value||'');
 
-  const cached=localStorage.getItem('gta_rp_chir_report');
-  if(cached) $('#report').value=cached;
-
+  // Init
   renderResults();
+  const cached=localStorage.getItem('gta_rp_chir_report'); if(cached) document.getElementById('report').value=cached;
   </script>
 </body>
 </html>
