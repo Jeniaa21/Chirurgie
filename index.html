@@ -6,26 +6,65 @@
   <title>Chirurgie Complexe — GTA RP</title>
   <!-- Tailwind CDN (runtime) -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Tailwind in CDN: enable class-based dark mode
+    tailwind.config = { darkMode: 'class' };
+  </script>
   <style>
-    /* Petites améliorations visuelles */
-    .card{ @apply bg-white rounded-2xl shadow-sm border border-slate-200; }
-    .btn{ @apply inline-flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border; }
-    .btn-primary{ @apply bg-slate-900 text-white border-slate-900; }
-    .btn-ghost{ @apply bg-white text-slate-700 border-slate-200; }
-    .badge{ @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-700 border border-slate-200; }
-    .tabs [data-tab]{ @apply px-3 py-1.5 rounded-lg text-sm cursor-pointer; }
-    .tabs [data-tab].active{ @apply bg-slate-900 text-white; }
+    /* --- Design tokens (light/dark) --- */
+    :root{
+      --bg: #f8fafc;             /* slate-50 */
+      --panel: #ffffff;           /* white */
+      --border: #e2e8f0;          /* slate-200 */
+      --text: #0f172a;            /* slate-900 */
+      --muted: #64748b;           /* slate-500 */
+      --chip: #f1f5f9;            /* slate-100 */
+      --shadow: 0 8px 24px rgba(2,6,23,.06);
+      --ring: rgba(15,23,42,.12);
+      --accent: #0f172a;          /* slate-900 */
+    }
+    .dark{
+      --bg: #0b1220;             /* custom dark */
+      --panel: #0f172a;           /* slate-900 */
+      --border: #1f2937;          /* gray-800 */
+      --text: #e5e7eb;            /* gray-200 */
+      --muted: #94a3b8;          /* slate-400 */
+      --chip: #111827;            /* gray-900 */
+      --shadow: 0 8px 24px rgba(0,0,0,.35);
+      --ring: rgba(148,163,184,.2);
+      --accent: #38bdf8;          /* sky-400 */
+    }
+    /* --- Utility classes (no @apply to keep CDN happy) --- */
+    body{ background:var(--bg); color:var(--text); }
+    .card{ background:var(--panel); border:1px solid var(--border); border-radius:1rem; box-shadow:var(--shadow); }
+    .btn{ display:inline-flex; align-items:center; gap:.5rem; padding:.5rem .75rem; border-radius:.75rem; border:1px solid var(--border); font-weight:600; font-size:.9rem; }
+    .btn:hover{ box-shadow:0 0 0 6px var(--ring); }
+    .btn-primary{ background:var(--accent); color:white; border-color:var(--accent); }
+    .btn-ghost{ background:var(--panel); color:var(--text); }
+    .badge{ display:inline-flex; align-items:center; padding:.15rem .5rem; border-radius:9999px; font-size:.75rem; border:1px solid var(--border); background:var(--chip); color:var(--muted); }
+    .tabs button{ padding:.4rem .75rem; border-radius:.6rem; font-weight:600; font-size:.9rem; color:var(--muted); }
+    .tabs button.active{ background:var(--accent); color:white; }
     .list-dash li{ position: relative; padding-left: 1rem; }
-    .list-dash li::before{ content: "•"; position: absolute; left: 0; color:#0f172a; }
+    .list-dash li::before{ content: "•"; position: absolute; left: 0; color:var(--accent); }
     .sticky-col{ position: sticky; top: 6rem; }
+    .field{ border:1px solid var(--border); background:var(--panel); color:var(--text); border-radius:.75rem; padding:.6rem .75rem; }
+    details.dropdown > summary{ list-style:none; }
+    details.dropdown[open] > summary{ box-shadow:0 0 0 6px var(--ring); }
+    .menu{ border:1px solid var(--border); background:var(--panel); border-radius:.75rem; box-shadow:var(--shadow); }
+    .menu label{ display:flex; align-items:center; gap:.5rem; padding:.4rem .5rem; border-radius:.5rem; cursor:pointer; }
+    .menu label:hover{ background:rgba(148,163,184,.08); }
+    .kbd{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; border:1px solid var(--border); background:var(--chip); padding:.1rem .35rem; border-radius:.4rem; }
   </style>
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-900">
-  <header class="sticky top-0 z-30 backdrop-blur bg-white/70 border-b">
+<body>
+  <header class="sticky top-0 z-30 backdrop-blur border-b" style="background:color-mix(in oklab,var(--panel) 80%, transparent)">
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
-      <span class="text-xl">🩺</span>
-      <h1 class="text-xl font-semibold">Chirurgie Complexe — Guide RP</h1>
+      <div class="flex items-center gap-2">
+        <span class="text-2xl">🩺</span>
+        <h1 class="text-lg md:text-xl font-semibold">Chirurgie Complexe — Guide RP</h1>
+      </div>
       <span class="ml-auto badge">Hôpital — GTA RP</span>
+      <button id="themeToggle" class="btn btn-ghost ml-2" title="Mode sombre (t)">🌗 <span class="hidden md:inline">Thème</span></button>
     </div>
   </header>
 
@@ -33,17 +72,19 @@
     <!-- Colonne gauche: recherche + résultats -->
     <section class="lg:col-span-2 space-y-4">
       <div class="card p-4">
-        <div class="flex flex-col gap-3">
-          <div class="flex gap-2 items-center">
-            <div class="relative flex-1">
-              <input id="q" class="w-full border rounded-xl px-3 py-2 pl-9" placeholder="Rechercher: fracture, rachis, brûlure, valve…" />
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔎</span>
+        <div class="flex flex-col gap-4">
+          <div class="flex flex-wrap gap-2 items-center">
+            <div class="relative grow">
+              <input id="q" class="field pl-10 w-full" placeholder="Rechercher: fracture, rachis, brûlure, valve…" />
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 opacity-60">🔎</span>
             </div>
             <button id="btnReset" class="btn btn-ghost">↺ Réinitialiser</button>
-            <details class="relative">
-              <summary class="btn btn-ghost cursor-pointer select-none">🔽 Catégories</summary>
-              <div class="absolute right-0 mt-2 w-64 card p-2 grid gap-1 z-10">
-                <div id="catList" class="grid gap-1"></div>
+            <details class="relative dropdown">
+              <summary class="btn btn-ghost cursor-pointer select-none">🗂️ Catégories</summary>
+              <div class="absolute right-0 mt-2 w-72 p-2 menu z-10">
+                <div class="text-sm font-semibold mb-1">Afficher</div>
+                <div id="catList" class="grid grid-cols-1 gap-1"></div>
+                <div class="flex justify-end pt-2"><button id="btnAllCats" class="btn btn-ghost">Tout cocher</button></div>
               </div>
             </details>
           </div>
@@ -62,28 +103,62 @@
           <span>📝</span>
           <h2 class="text-base font-semibold">Rapport médical (générateur)</h2>
         </div>
-        <textarea id="report" class="w-full min-h-[380px] border rounded-xl p-3 font-mono" placeholder="Clique sur \"Composer rapport\" depuis une fiche pour pré-remplir ici…"></textarea>
+        <textarea id="report" class="w-full min-h-[380px] field font-mono" placeholder="Clique sur \"Composer rapport\" depuis une fiche pour pré-remplir ici…"></textarea>
         <div class="flex gap-2 justify-end mt-2">
           <button id="btnCopy" class="btn btn-ghost">📋 Copier</button>
           <button id="btnDownload" class="btn btn-primary">⬇️ Télécharger</button>
         </div>
-        <hr class="my-3" />
+        <hr class="my-3 border-[var(--border)]" />
         <div>
           <p class="text-sm font-medium">Inclure des checklists</p>
           <label class="flex items-center gap-2 text-sm mt-1"><input type="checkbox" id="ckABCDE" checked> ABCDE</label>
           <label class="flex items-center gap-2 text-sm mt-1"><input type="checkbox" id="ckThorax"> Trauma thorax</label>
           <label class="flex items-center gap-2 text-sm mt-1"><input type="checkbox" id="ckBrules"> Brûlés</label>
+          <p class="text-xs opacity-70 mt-2">Astuce : appuie sur <span class="kbd">t</span> pour basculer le thème à tout moment.</p>
         </div>
       </div>
     </aside>
   </main>
 
-  <footer class="max-w-7xl mx-auto px-4 pb-8 text-xs text-slate-500">
-    <hr class="mb-3 border-slate-200" />
+  <footer class="max-w-7xl mx-auto px-4 pb-8 text-xs" style="color:var(--muted)">
+    <hr class="mb-3" style="border-color:var(--border)" />
     ⚠️ Outil de jeu — GTA RP. Procédures simplifiées et non prescriptives. Ce contenu ne constitue pas un conseil médical réel.
   </footer>
 
+  <template id="skeletonCard">
+    <div class="card p-3 animate-pulse">
+      <div class="h-4 rounded bg-[var(--chip)] w-3/4"></div>
+      <div class="flex gap-1 mt-2">
+        <div class="h-5 w-16 rounded bg-[var(--chip)]"></div>
+        <div class="h-5 w-14 rounded bg-[var(--chip)]"></div>
+        <div class="h-5 w-12 rounded bg-[var(--chip)]"></div>
+      </div>
+      <div class="flex gap-2 pt-3">
+        <div class="h-9 w-36 rounded bg-[var(--chip)]"></div>
+        <div class="h-9 w-32 rounded bg-[var(--chip)]"></div>
+      </div>
+    </div>
+  </template>
+
   <script>
+  // ------------------------------
+  // Thème (dark/light) avec persistance
+  // ------------------------------
+  const root = document.documentElement;
+  const THEME_KEY = 'gta_rp_theme';
+  function setTheme(mode){
+    if(mode==='dark'){ root.classList.add('dark'); localStorage.setItem(THEME_KEY,'dark'); }
+    else { root.classList.remove('dark'); localStorage.setItem(THEME_KEY,'light'); }
+  }
+  (function initTheme(){
+    const saved = localStorage.getItem(THEME_KEY);
+    if(saved){ setTheme(saved); } else if(window.matchMedia('(prefers-color-scheme: dark)').matches){ setTheme('dark'); }
+  })();
+  document.getElementById('themeToggle').addEventListener('click', ()=>{
+    const isDark = root.classList.contains('dark'); setTheme(isDark?'light':'dark');
+  });
+  window.addEventListener('keydown', (e)=>{ if(e.key.toLowerCase()==='t'){ document.getElementById('themeToggle').click(); }});
+
   // ------------------------------
   // Données (synthèse RP)
   // ------------------------------
@@ -100,255 +175,94 @@
   ];
 
   const bank = [
-    {
-      id: "os-fix",
-      titre: "Réparation osseuse (broches/vis/plaques/pâte)",
-      categorie: "Orthopédie/Os",
-      tags: ["fracture", "broches", "vis", "plaques", "pâte osseuse"],
-      examens: [
-        "Inspection + douleur provoquée, déformation, plaie ouverte",
-        "Contrôle vasculo-nerveux distal (pouls, sensibilité, motricité)",
-        "Immobilisation provisoire (attelle) avant transport",
-        "Imagerie RP: radio/scan si dispo en service",
-      ],
-      gestes: [
-        "Hémostase locale si plaie",
-        "Attelle modelable, glace externe",
-        "Antalgie non chiffrée (RP)",
-        "Transport vers bloc si fracture instable/ouverte",
-      ],
-      bloc: [
-        "Broches/clous IM: réalignement + verrouillage",
-        "Plaques + vis anatomiques si fracture articulaire/complexe",
-        "Pâte/greffe osseuse si perte de substance",
-      ],
-      postop: [
-        "Contrôle vasculo-nerveux post-immobilisation",
-        "Imagerie de contrôle",
-        "Décharge/béquilles selon segment",
-      ],
-      rapportPoints: ["Os concerné", "Type de fracture", "Gestes d'urgence", "Fixation réalisée", "Surveillance"],
-    },
-    {
-      id: "crane",
-      titre: "Chirurgie crânienne (craniotomie / crânioplastie)",
-      categorie: "Crâne/Neurochir",
-      tags: ["TCC", "hématome", "craniotomie", "crânioplastie", "plaques crâniennes"],
-      examens: [
-        "Score de Glasgow, pupilles, déficit focal",
-        "Stabilisation cervicale jusqu'à imagerie",
-        "Scan crâne si dispo (RP)",
-      ],
-      gestes: [
-        "ABCDE avec surveillance G",
-        "Oxygénation, contrôle des convulsions si besoin (RP)",
-        "Préparation bloc si hématome compressif",
-      ],
-      bloc: [
-        "Craniotomie: volet + évacuation hématome",
-        "Plaques/vis titane pour refixation",
-        "Crânioplastie ou ciment (PMMA/hydroxyapatite) si défaut",
-      ],
-      postop: [
-        "Surveillance neuro rapprochée",
-        "Scan de contrôle",
-        "Prévention infection",
-      ],
-      rapportPoints: ["Mécanisme", "Glasgow", "Lésions scan", "Geste neurochir", "Évolution immédiate"],
-    },
-    {
-      id: "rachis",
-      titre: "Rachis (discectomie, laminectomie, fusion, foraminotomie)",
-      categorie: "Rachis",
-      tags: ["rachis", "hernie discale", "sténose", "fracture", "scoliose"],
-      examens: [
-        "Immobilisation stricte du rachis",
-        "Évaluation sensitivo-motrice et périnée",
-        "Scan/IRM selon RP",
-      ],
-      gestes: [
-        "Collier + plan dur",
-        "Antalgie prudente (RP)",
-        "Transport bloc si déficit évolutif/instabilité",
-      ],
-      bloc: [
-        "Discectomie si conflit disque-nerf",
-        "Laminectomie pour décompression",
-        "Fusion + vis/tiges, cage si instabilité",
-      ],
-      postop: ["Surveillance neuro", "Mobilisation encadrée", "Imagerie de contrôle"],
-      rapportPoints: ["Niveau lésionnel", "Déficit", "Imagerie", "Geste réalisé", "Stabilité finale"],
-    },
-    {
-      id: "muscle",
-      titre: "Rupture musculaire (partielle/complète)",
-      categorie: "Muscles/Tendons",
-      tags: ["déchirure", "rupture", "suture musculaire", "rééducation"],
-      examens: [
-        "Douleur localisée, hématome, déficit fonctionnel",
-        "Échelle douleur RP",
-        "Échographie si dispo",
-      ],
-      gestes: ["Repos, glace, compression, élévation (RICE)", "Immobilisation courte", "Antalgie RP"],
-      bloc: ["Suture des berges musculaires", "Renfort tendineux si besoin"],
-      postop: ["Immobilisation initiale", "Mobilisation douce", "Renforcement progressif"],
-      rapportPoints: ["Muscle atteint", "Type (partielle/complète)", "Gestes d'urgence", "Réparation", "Programme réhab"],
-    },
-    {
-      id: "thorax",
-      titre: "Chirurgie thoracique (lobe, médiastin, trachée, trauma)",
-      categorie: "Thorax",
-      tags: ["lobectomie", "pneumothorax", "hémothorax", "décortication", "trachéotomie"],
-      examens: ["Détresse respi?", "Auscultation, saturation", "Écho FAST/Radio si dispo"],
-      gestes: [
-        "Aiguille décompression si pneumo sous tension (RP)",
-        "Drain thoracique si indiqué (RP)",
-        "Oxygène et analgésie RP",
-      ],
-      bloc: [
-        "Lobectomie/segmentectomie selon lésion",
-        "Décortication pleurale",
-        "Trachéotomie si voie aérienne compromise",
-      ],
-      postop: ["Surveillance respi + drains", "Kiné respi", "Contrôle fuites d'air"],
-      rapportPoints: ["Mécanisme/Pathologie", "Côté atteint", "Gestes préhospitaliers", "Geste thoracique", "Drains"]
-    },
-    {
-      id: "cardiaque",
-      titre: "Cardiaque (pontage, valves, FA, DAV)",
-      categorie: "Cardiaque",
-      tags: ["pontage", "valve", "FA", "transplantation", "DAV"],
-      examens: ["Douleur thoracique?", "ECG si RP", "Écho si dispo"],
-      gestes: ["ABCDE + O2 si SpO2 basse", "Anti-douleur RP", "Prépa bloc si instabilité"],
-      bloc: ["Pontage coronarien", "Réparation/remplacement valvulaire", "Ablation/MAZE", "Implant DAV"],
-      postop: ["Surveillance en USIC/REA", "Prévention infection", "Rééducation cardiaque"],
-      rapportPoints: ["Diagnostic", "Geste cardiaque", "CPEC (REA/USIC)", "Évolution"],
-    },
-    {
-      id: "visc",
-      titre: "Viscéral/Abdomen (appendice, vésicule, hernie, résection…)",
-      categorie: "Viscéral/Abdomen",
-      tags: ["appendicite", "vésicule", "hernie", "résection", "gastrectomie", "bariatrique", "foie", "pancréas", "rate"],
-      examens: ["Douleur, défense/contracture", "N/V, transit", "FAST/Scan RP"],
-      gestes: ["Jeûne + VVP (RP)", "Antalgie RP", "Préparation bloc si abdomen aigu/trauma"],
-      bloc: [
-        "Appendicectomie (souvent coelio)",
-        "Cholécystectomie coelio",
-        "Herniorraphie/mesh",
-        "Résection intestinale ± stomie",
-        "Gastrectomie / sleeve",
-        "Hépatectomie partielle",
-        "Pancréatectomie (Whipple/distale)",
-        "Splénectomie",
-      ],
-      postop: ["Surveillance souillures/saignement", "Reprise du transit", "Douleur"],
-      rapportPoints: ["Organe", "Diagnostic", "Voie d'abord", "Geste", "Suites"],
-    },
-    {
-      id: "brules",
-      titre: "Grands brûlés",
-      categorie: "Grands brûlés",
-      tags: ["SCB", "Parkland", "greffe peau", "débridement"],
-      examens: [
-        "Évaluer profondeur + %SCB (règle des 9 / Lund-Browder RP)",
-        "Voies aériennes (inhalation?)",
-      ],
-      gestes: [
-        "Refroidir (pas de glace directe prolongée)",
-        "Retirer vêtements/objets chauds",
-        "Voie veineuse, réanimation liquidienne (RP, formule de Parkland en info seulement)",
-        "Antalgie RP",
-      ],
-      bloc: ["Débridement", "Greffes cutanées", "Pansements spécifiques"],
-      postop: ["Kiné + orthèses", "Suivi psycho", "Gestion cicatrices"],
-      rapportPoints: ["Mécanisme", "%SCB estimée", "Zones atteintes", "Gestes/initiaux", "Greffes"],
-    },
-    {
-      id: "neurotrauma",
-      titre: "Neurologie traumatique (TCC, moelle, nerfs périph.)",
-      categorie: "Neurologie traumatique",
-      tags: ["TCC", "lésion médullaire", "périphérique", "décompression"],
-      examens: ["ABCDE + Glasgow", "Immobilisation rachis", "Scan/IRM RP"],
-      gestes: ["Stabiliser VA/O2", "Prévenir hypotension/hypoxie", "Transport rapide vers spécialité"],
-      bloc: ["Craniotomie décompressive", "Fixation rachidienne", "Réparation nerveuse"],
-      postop: ["Rééducation pluridisciplinaire", "Prévention escarres/TVP", "Suivi long cours"],
-      rapportPoints: ["Type lésion", "Score GCS", "Gestes d'urgence", "Chirurgie", "Plan réhab"],
-    },
+    { id: 'os-fix', titre: 'Réparation osseuse (broches/vis/plaques/pâte)', categorie: 'Orthopédie/Os', tags: ['fracture','broches','vis','plaques','pâte osseuse'],
+      examens:["Inspection + douleur provoquée, déformation, plaie ouverte","Contrôle vasculo-nerveux distal (pouls, sensibilité, motricité)","Immobilisation provisoire (attelle) avant transport","Imagerie RP: radio/scan si dispo en service"],
+      gestes:["Hémostase locale si plaie","Attelle modelable, glace externe","Antalgie non chiffrée (RP)","Transport vers bloc si fracture instable/ouverte"],
+      bloc:["Broches/clous IM: réalignement + verrouillage","Plaques + vis anatomiques si fracture articulaire/complexe","Pâte/greffe osseuse si perte de substance"],
+      postop:["Contrôle vasculo-nerveux post-immobilisation","Imagerie de contrôle","Décharge/béquilles selon segment"],
+      rapportPoints:["Os concerné","Type de fracture","Gestes d'urgence","Fixation réalisée","Surveillance"] },
+    { id: 'crane', titre: 'Chirurgie crânienne (craniotomie / crânioplastie)', categorie: 'Crâne/Neurochir', tags: ['TCC','hématome','craniotomie','crânioplastie','plaques crâniennes'],
+      examens:["Score de Glasgow, pupilles, déficit focal","Stabilisation cervicale jusqu'à imagerie","Scan crâne si dispo (RP)"],
+      gestes:["ABCDE avec surveillance G","Oxygénation, contrôle des convulsions si besoin (RP)","Préparation bloc si hématome compressif"],
+      bloc:["Craniotomie: volet + évacuation hématome","Plaques/vis titane pour refixation","Crânioplastie ou ciment (PMMA/hydroxyapatite) si défaut"],
+      postop:["Surveillance neuro rapprochée","Scan de contrôle","Prévention infection"],
+      rapportPoints:["Mécanisme","Glasgow","Lésions scan","Geste neurochir","Évolution immédiate"] },
+    { id: 'rachis', titre: 'Rachis (discectomie, laminectomie, fusion, foraminotomie)', categorie: 'Rachis', tags:['rachis','hernie discale','sténose','fracture','scoliose'],
+      examens:["Immobilisation stricte du rachis","Évaluation sensitivo-motrice et périnée","Scan/IRM selon RP"],
+      gestes:["Collier + plan dur","Antalgie prudente (RP)","Transport bloc si déficit évolutif/instabilité"],
+      bloc:["Discectomie si conflit disque-nerf","Laminectomie pour décompression","Fusion + vis/tiges, cage si instabilité"],
+      postop:["Surveillance neuro","Mobilisation encadrée","Imagerie de contrôle"],
+      rapportPoints:["Niveau lésionnel","Déficit","Imagerie","Geste réalisé","Stabilité finale"] },
+    { id: 'muscle', titre: 'Rupture musculaire (partielle/complète)', categorie: 'Muscles/Tendons', tags:['déchirure','rupture','suture musculaire','rééducation'],
+      examens:["Douleur localisée, hématome, déficit fonctionnel","Échelle douleur RP","Échographie si dispo"],
+      gestes:["Repos, glace, compression, élévation (RICE)","Immobilisation courte","Antalgie RP"],
+      bloc:["Suture des berges musculaires","Renfort tendineux si besoin"],
+      postop:["Immobilisation initiale","Mobilisation douce","Renforcement progressif"],
+      rapportPoints:["Muscle atteint","Type (partielle/complète)","Gestes d'urgence","Réparation","Programme réhab"] },
+    { id: 'thorax', titre: 'Chirurgie thoracique (lobe, médiastin, trachée, trauma)', categorie: 'Thorax', tags:['lobectomie','pneumothorax','hémothorax','décortication','trachéotomie'],
+      examens:["Détresse respi?","Auscultation, saturation","Écho FAST/Radio si dispo"],
+      gestes:["Aiguille décompression si pneumo sous tension (RP)","Drain thoracique si indiqué (RP)","Oxygène et analgésie RP"],
+      bloc:["Lobectomie/segmentectomie selon lésion","Décortication pleurale","Trachéotomie si voie aérienne compromise"],
+      postop:["Surveillance respi + drains","Kiné respi","Contrôle fuites d'air"],
+      rapportPoints:["Mécanisme/Pathologie","Côté atteint","Gestes préhospitaliers","Geste thoracique","Drains"] },
+    { id: 'cardiaque', titre: 'Cardiaque (pontage, valves, FA, DAV)', categorie: 'Cardiaque', tags:['pontage','valve','FA','transplantation','DAV'],
+      examens:["Douleur thoracique?","ECG si RP","Écho si dispo"],
+      gestes:["ABCDE + O2 si SpO2 basse","Anti-douleur RP","Prépa bloc si instabilité"],
+      bloc:["Pontage coronarien","Réparation/remplacement valvulaire","Ablation/MAZE","Implant DAV"],
+      postop:["Surveillance en USIC/REA","Prévention infection","Rééducation cardiaque"],
+      rapportPoints:["Diagnostic","Geste cardiaque","CPEC (REA/USIC)","Évolution"] },
+    { id: 'visc', titre: 'Viscéral/Abdomen (appendice, vésicule, hernie, résection…)', categorie: 'Viscéral/Abdomen', tags:['appendicite','vésicule','hernie','résection','gastrectomie','bariatrique','foie','pancréas','rate'],
+      examens:["Douleur, défense/contracture","N/V, transit","FAST/Scan RP"],
+      gestes:["Jeûne + VVP (RP)","Antalgie RP","Préparation bloc si abdomen aigu/trauma"],
+      bloc:["Appendicectomie (souvent coelio)","Cholécystectomie coelio","Herniorraphie/mesh","Résection intestinale ± stomie","Gastrectomie / sleeve","Hépatectomie partielle","Pancréatectomie (Whipple/distale)","Splénectomie"],
+      postop:["Surveillance souillures/saignement","Reprise du transit","Douleur"],
+      rapportPoints:["Organe","Diagnostic","Voie d'abord","Geste","Suites"] },
+    { id: 'brules', titre: 'Grands brûlés', categorie: 'Grands brûlés', tags:['SCB','Parkland','greffe peau','débridement'],
+      examens:["Évaluer profondeur + %SCB (règle des 9 / Lund-Browder RP)","Voies aériennes (inhalation?)"],
+      gestes:["Refroidir (pas de glace directe prolongée)","Retirer vêtements/objets chauds","Voie veineuse, réanimation liquidienne (RP, formule de Parkland en info seulement)","Antalgie RP"],
+      bloc:["Débridement","Greffes cutanées","Pansements spécifiques"],
+      postop:["Kiné + orthèses","Suivi psycho","Gestion cicatrices"],
+      rapportPoints:["Mécanisme","%SCB estimée","Zones atteintes","Gestes/initiaux","Greffes"] },
+    { id: 'neurotrauma', titre: 'Neurologie traumatique (TCC, moelle, nerfs périph.)', categorie: 'Neurologie traumatique', tags:['TCC','lésion médullaire','périphérique','décompression'],
+      examens:["ABCDE + Glasgow","Immobilisation rachis","Scan/IRM RP"],
+      gestes:["Stabiliser VA/O2","Prévenir hypotension/hypoxie","Transport rapide vers spécialité"],
+      bloc:["Craniotomie décompressive","Fixation rachidienne","Réparation nerveuse"],
+      postop:["Rééducation pluridisciplinaire","Prévention escarres/TVP","Suivi long cours"],
+      rapportPoints:["Type lésion","Score GCS","Gestes d'urgence","Chirurgie","Plan réhab"] },
   ];
 
   const checklists = {
-    ABCDE: [
-      "A — Airway: perméabilité, collier si trauma",
-      "B — Breathing: FR, SpO2, auscultation, décompression si tension (RP)",
-      "C — Circulation: pouls, hémorragies, perfusion",
-      "D — Disability: Glasgow, pupilles, déficit",
-      "E — Exposure: déshabiller, température, lésions",
-    ],
-    TraumaThorax: [
-      "Inspection cage (emphysème SC, volet costal)",
-      "Percussion (hyper/tympanisme)",
-      "Auscultation (asymétrie)",
-      "Si détresse + déviation trachéale ⇒ décompression (RP)",
-    ],
-    Brules: [
-      "Arrêt agent vulnérant, refroidissement 10-20 min",
-      "Évaluer %SCB (RP)",
-      "Voies aériennes: suspicion inhalation",
-      "Couvrir stérile/film alimentaire (RP)",
-    ],
+    ABCDE: ["A — Airway: perméabilité, collier si trauma","B — Breathing: FR, SpO2, auscultation, décompression si tension (RP)","C — Circulation: pouls, hémorragies, perfusion","D — Disability: Glasgow, pupilles, déficit","E — Exposure: déshabiller, température, lésions"],
+    TraumaThorax: ["Inspection cage (emphysème SC, volet costal)","Percussion (hyper/tympanisme)","Auscultation (asymétrie)","Si détresse + déviation trachéale ⇒ décompression (RP)"],
+    Brules: ["Arrêt agent vulnérant, refroidissement 10-20 min","Évaluer %SCB (RP)","Voies aériennes: suspicion inhalation","Couvrir stérile/film alimentaire (RP)"]
   };
 
   // ------------------------------
   // Helpers
   // ------------------------------
   const $ = (sel) => document.querySelector(sel);
-  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
-
-  function cx(...c){ return c.filter(Boolean).join(' '); }
-
-  function blobDownload(filename, text){
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = filename; a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  function formatDate(){
-    const n = new Date();
-    const pad = (x)=> String(x).padStart(2,'0');
-    return `${pad(n.getDate())}/${pad(n.getMonth()+1)}/${n.getFullYear()} ${pad(n.getHours())}:${pad(n.getMinutes())}`;
-  }
-
+  function blobDownload(filename, text){ const blob = new Blob([text], { type: 'text/plain;charset=utf-8' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url); }
+  function formatDate(){ const n = new Date(); const pad = (x)=> String(x).padStart(2,'0'); return `${pad(n.getDate())}/${pad(n.getMonth()+1)}/${n.getFullYear()} ${pad(n.getHours())}:${pad(n.getMinutes())}`; }
   function makeReport(item, include){
-    const checklistText = [
-      include.ABCDE ? `\nChecklist ABCDE:\n- ${checklists.ABCDE.join('\n- ')}` : '',
-      include.TraumaThorax ? `\nChecklist Trauma thorax:\n- ${checklists.TraumaThorax.join('\n- ')}` : '',
-      include.Brules ? `\nChecklist Brûlés:\n- ${checklists.Brules.join('\n- ')}` : '',
-    ].filter(Boolean).join('\n');
-
+    const checklistText = [ include.ABCDE ? `\nChecklist ABCDE:\n- ${checklists.ABCDE.join('\n- ')}` : '', include.TraumaThorax ? `\nChecklist Trauma thorax:\n- ${checklists.TraumaThorax.join('\n- ')}` : '', include.Brules ? `\nChecklist Brûlés:\n- ${checklists.Brules.join('\n- ')}` : '' ].filter(Boolean).join('\n');
     return `RAPPORT MÉDICAL — Chirurgie complexe (RP)\nDate/Heure: ${formatDate()}\n\nPatient: __________________  Âge: __  Sexe: __  ID RP: ________\nMéca/Contexte: _________________________________________________\n\nCATÉGORIE: ${item.categorie}\nCAS: ${item.titre}\n\nEXAMENS:\n- ${item.examens.join('\n- ')}\n\nGESTES INITIAUX:\n- ${item.gestes.join('\n- ')}\n\nBLOC/OPÉRATION:\n- ${item.bloc.join('\n- ')}\n\nPOST-OP / SURVEILLANCE:\n- ${item.postop.join('\n- ')}\n${checklistText}\n\nPOINTS CLÉS À DOCUMENTER:\n- ${item.rapportPoints.join('\n- ')}\n\nRemarques complémentaires: _____________________________________\nSignature: __________`;
   }
 
   // ------------------------------
   // UI rendering
   // ------------------------------
-  const state = {
-    q: '',
-    catFilter: new Set(CATEGORIES),
-    selectedId: null,
-  };
+  const state = { q: '', catFilter: new Set(CATEGORIES), selectedId: null };
 
   function renderCategories(){
-    const box = $('#catList');
+    const box = document.getElementById('catList');
     box.innerHTML = '';
     CATEGORIES.forEach(cat => {
       const id = `cat-${cat.replace(/[^a-z0-9]/gi,'_')}`;
       const row = document.createElement('label');
-      row.className = 'flex items-center gap-2 text-sm px-2 py-1 rounded hover:bg-slate-50';
       row.innerHTML = `<input type="checkbox" id="${id}" ${state.catFilter.has(cat)?'checked':''}/> <span>${cat}</span>`;
-      row.querySelector('input').addEventListener('change', (e)=>{
-        if(e.target.checked) state.catFilter.add(cat); else state.catFilter.delete(cat);
+      row.addEventListener('change', (e)=>{
+        const inp = row.querySelector('input');
+        if(inp.checked) state.catFilter.add(cat); else state.catFilter.delete(cat);
         renderResults();
       });
       box.appendChild(row);
@@ -360,10 +274,24 @@
     return bank.filter(it => state.catFilter.has(it.categorie) && (!q || it.titre.toLowerCase().includes(q) || it.tags.join(' ').toLowerCase().includes(q)) );
   }
 
+  function skeleton(n=4){
+    const t = document.getElementById('skeletonCard');
+    const list = document.getElementById('results');
+    list.innerHTML = '';
+    for(let i=0;i<n;i++){ list.appendChild(t.content.cloneNode(true)); }
+  }
+
   function renderResults(){
-    const list = $('#results');
+    const list = document.getElementById('results');
     list.innerHTML = '';
     const data = filterData();
+    if(!data.length){
+      const empty = document.createElement('div');
+      empty.className = 'card p-6 text-center';
+      empty.innerHTML = `<div class="text-lg">😕 Aucun résultat</div><div class="text-sm mt-1" style="color:var(--muted)">Essaie un autre mot-clé ou active plus de catégories.</div>`;
+      list.appendChild(empty);
+      return;
+    }
     data.forEach(item => {
       const card = document.createElement('div');
       card.className = 'card p-3';
@@ -373,7 +301,7 @@
           <span class="badge">${item.categorie}</span>
           ${item.tags.slice(0,3).map(t => `<span class='badge'>${t}</span>`).join('')}
         </div>
-        <div class="flex gap-2 pt-2">
+        <div class="flex gap-2 pt-3">
           <button class="btn btn-primary" data-action="compose">🧾 Composer rapport</button>
           <button class="btn btn-ghost" data-action="details">📋 Voir détails</button>
         </div>
@@ -386,29 +314,29 @@
 
   function showDetails(item){
     state.selectedId = item.id;
-    const wrap = $('#detailsWrap');
+    const wrap = document.getElementById('detailsWrap');
     wrap.innerHTML = '';
     const card = document.createElement('div');
     card.className = 'card p-4';
     card.innerHTML = `
-      <div class="flex items-center justify-between">
+      <div class="flex items-center justify-between gap-2">
         <h3 class="text-base font-semibold">Détails — ${item.titre}</h3>
         <button class="btn btn-primary" id="btnCompose2">🧾 Composer un rapport</button>
       </div>
       <div class="tabs mt-3 flex flex-wrap gap-2">
-        <button data-tab="examens" class="active">Examens</button>
-        <button data-tab="gestes">Gestes</button>
-        <button data-tab="bloc">Bloc</button>
-        <button data-tab="postop">Post-op</button>
-        <button data-tab="rapport">Rapport</button>
+        <button data-tab="examens" class="active">🧪 Examens</button>
+        <button data-tab="gestes">✚ Gestes</button>
+        <button data-tab="bloc">🛠️ Bloc</button>
+        <button data-tab="postop">💊 Post-op</button>
+        <button data-tab="rapport">🧾 Rapport</button>
       </div>
       <div id="tabContent" class="mt-3"></div>
-      <hr class="my-3"/>
-      <p class="text-xs text-slate-500">Ajouts automatiques possibles :</p>
+      <hr class="my-3" style="border-color:var(--border)"/>
+      <p class="text-xs" style="color:var(--muted)">Ajouts automatiques possibles :</p>
       <div class="grid sm:grid-cols-3 gap-2 mt-1 text-sm">
-        <label class="flex items-center gap-2"><input type="checkbox" id="incABCDE" ${$('#ckABCDE').checked?'checked':''}/> Inclure checklist ABCDE</label>
-        <label class="flex items-center gap-2"><input type="checkbox" id="incThorax" ${$('#ckThorax').checked?'checked':''}/> Inclure checklist Trauma thorax</label>
-        <label class="flex items-center gap-2"><input type="checkbox" id="incBrules" ${$('#ckBrules').checked?'checked':''}/> Inclure checklist Brûlés</label>
+        <label class="flex items-center gap-2"><input type="checkbox" id="incABCDE" ${document.getElementById('ckABCDE').checked?'checked':''}/> Inclure checklist ABCDE</label>
+        <label class="flex items-center gap-2"><input type="checkbox" id="incThorax" ${document.getElementById('ckThorax').checked?'checked':''}/> Inclure checklist Trauma thorax</label>
+        <label class="flex items-center gap-2"><input type="checkbox" id="incBrules" ${document.getElementById('ckBrules').checked?'checked':''}/> Inclure checklist Brûlés</label>
       </div>
     `;
     card.querySelector('#btnCompose2').addEventListener('click', ()=>composeReport(item));
@@ -418,18 +346,14 @@
       btn.classList.add('active');
       renderTab(btn.getAttribute('data-tab'));
     }));
-
+    function bullets(arr){ return `<ul class='list-dash space-y-1 text-sm'>${arr.map(x=>`<li>${x}</li>`).join('')}</ul>`; }
     function renderTab(name){
       const c = card.querySelector('#tabContent');
-      const bullets = (arr)=> `<ul class='list-dash space-y-1 text-sm'>${arr.map(x=>`<li>${x}</li>`).join('')}</ul>`;
       if(name==='examens') c.innerHTML = bullets(item.examens);
       if(name==='gestes')  c.innerHTML = bullets(item.gestes);
       if(name==='bloc')    c.innerHTML = bullets(item.bloc);
       if(name==='postop')  c.innerHTML = bullets(item.postop);
-      if(name==='rapport') c.innerHTML = `
-        <p class='text-sm mb-2'>Points clés à documenter :</p>
-        <div class='flex flex-wrap gap-1'>${item.rapportPoints.map(p=>`<span class='badge'>${p}</span>`).join('')}</div>
-      `;
+      if(name==='rapport') c.innerHTML = `<p class='text-sm mb-2'>Points clés à documenter :</p><div class='flex flex-wrap gap-1'>${item.rapportPoints.map(p=>`<span class='badge'>${p}</span>`).join('')}</div>`;
     }
     renderTab('examens');
     wrap.appendChild(card);
@@ -438,12 +362,12 @@
 
   function composeReport(item){
     const include = {
-      ABCDE: $('#incABCDE') ? $('#incABCDE').checked : $('#ckABCDE').checked,
-      TraumaThorax: $('#incThorax') ? $('#incThorax').checked : $('#ckThorax').checked,
-      Brules: $('#incBrules') ? $('#incBrules').checked : $('#ckBrules').checked,
+      ABCDE: document.getElementById('incABCDE') ? document.getElementById('incABCDE').checked : document.getElementById('ckABCDE').checked,
+      TraumaThorax: document.getElementById('incThorax') ? document.getElementById('incThorax').checked : document.getElementById('ckThorax').checked,
+      Brules: document.getElementById('incBrules') ? document.getElementById('incBrules').checked : document.getElementById('ckBrules').checked,
     };
     const text = makeReport(item, include);
-    const ta = $('#report');
+    const ta = document.getElementById('report');
     ta.value = text;
     localStorage.setItem('gta_rp_chir_report', text);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -452,31 +376,20 @@
   // ------------------------------
   // Events init
   // ------------------------------
-  $('#q').addEventListener('input', (e)=>{ state.q = e.target.value; renderResults(); });
-  $('#btnReset').addEventListener('click', ()=>{ state.q=''; $('#q').value=''; state.catFilter = new Set(CATEGORIES); renderCategories(); renderResults(); });
+  document.getElementById('q').addEventListener('input', (e)=>{ state.q = e.target.value; renderResults(); });
+  document.getElementById('btnReset').addEventListener('click', ()=>{ state.q=''; document.getElementById('q').value=''; state.catFilter = new Set(CATEGORIES); renderCategories(); renderResults(); });
+  document.getElementById('btnCopy').addEventListener('click', async ()=>{ try { await navigator.clipboard.writeText(document.getElementById('report').value || ''); } catch{} });
+  document.getElementById('btnDownload').addEventListener('click', ()=> blobDownload('rapport_chirurgie_RP.txt', document.getElementById('report').value || ''));
+  document.getElementById('btnAllCats').addEventListener('click', ()=>{ state.catFilter = new Set(CATEGORIES); renderCategories(); renderResults(); });
 
-  $('#btnCopy').addEventListener('click', async ()=>{
-    try { await navigator.clipboard.writeText($('#report').value || ''); } catch{}
-  });
-  $('#btnDownload').addEventListener('click', ()=> blobDownload('rapport_chirurgie_RP.txt', $('#report').value || ''));
+  ;['ckABCDE','ckThorax','ckBrules'].forEach(id => { document.getElementById(id).addEventListener('change', ()=>{ if(state.selectedId){ const item = bank.find(b=>b.id===state.selectedId); if(item) composeReport(item); } }); });
 
-  // checkbox defaults
-  ['ckABCDE','ckThorax','ckBrules'].forEach(id => {
-    $('#'+id).addEventListener('change', ()=>{
-      if(state.selectedId){
-        const item = bank.find(b=>b.id===state.selectedId);
-        if(item) composeReport(item);
-      }
-    });
-  });
+  const cached = localStorage.getItem('gta_rp_chir_report'); if(cached) document.getElementById('report').value = cached;
 
-  // Restore cached report
-  const cached = localStorage.getItem('gta_rp_chir_report');
-  if(cached) $('#report').value = cached;
-
-  // First render
+  // First render with skeleton placeholder for nicer visual
   renderCategories();
-  renderResults();
+  skeleton(4);
+  setTimeout(renderResults, 250);
   </script>
 </body>
 </html>
